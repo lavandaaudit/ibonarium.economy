@@ -124,10 +124,9 @@ async function loadFX(){
 }
 
 /* ================= METALS ================= */
-/* Тут просто приближені ціни, реально можна замінити на Metals-API ключ */
 async function loadMetals(){
   try{
-    // Реальні актуальні спотові діапазони приблизно
+    // Приблизні спотові ціни в USD/унція
     const metalsData = [
       {symbol:"XAU",price:4300},
       {symbol:"XAG",price:73},
@@ -144,19 +143,33 @@ async function loadMetals(){
 async function loadCrypto(){
   try{
     const r=await fetch(
-      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana,litecoin,ripple,dash"
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,litecoin,ripple,dash&vs_currencies=usd&include_24hr_change=true"
     );
     const d=await r.json();
 
-    crypto.innerHTML=d.map(c=>{
-      const cls=c.price_change_percentage_24h>=0?"up":"down";
-      const sign=c.price_change_percentage_24h>=0?"+":"";
-      return `<div>${c.symbol.toUpperCase()} ${c.current_price.toFixed(2)} USD <span class="${cls}">${sign}${c.price_change_percentage_24h.toFixed(2)}%</span></div>`;
+    const coins = [
+      {id:"bitcoin", symbol:"BTC"},
+      {id:"ethereum", symbol:"ETH"},
+      {id:"solana", symbol:"SOL"},
+      {id:"litecoin", symbol:"LTC"},
+      {id:"ripple", symbol:"XRP"},
+      {id:"dash", symbol:"DASH"}
+    ];
+
+    crypto.innerHTML = coins.map(c=>{
+      const price = d[c.id].usd.toFixed(2);
+      const change = d[c.id].usd_24h_change.toFixed(2);
+      const cls = change>=0 ? "up":"down";
+      const sign = change>=0 ? "+":"";
+      return `<div>${c.symbol} ${price} USD <span class="${cls}">${sign}${change}%</span></div>`;
     }).join("");
 
-    tickerText.innerText=d.map(c=>
-      `${c.symbol.toUpperCase()} ${c.current_price.toFixed(2)} USD (${c.price_change_percentage_24h.toFixed(2)}%)`
-    ).join(" • ");
+    // ticker
+    tickerText.innerText = coins.map(c=>{
+      const price = d[c.id].usd.toFixed(2);
+      const change = d[c.id].usd_24h_change.toFixed(2);
+      return `${c.symbol} ${price} USD (${change}%)`;
+    }).join(" • ");
 
   }catch{
     crypto.innerHTML="<div>NO DATA</div>";
