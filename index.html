@@ -62,14 +62,14 @@ draw();
 // ================= FX & Metals =================
 async function loadFX(){
   try{
-    const res = await fetch('https://open.er-api.com/v6/latest/UAH');
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
     const fx = await res.json();
     if(fx.result==="success"){
       document.getElementById("fx").innerHTML = `
-        <div>UAH / USD ${fx.rates.USD.toFixed(2)}</div>
-        <div>UAH / EUR ${fx.rates.EUR.toFixed(2)}</div>
-        <div>UAH / PLN ${fx.rates.PLN.toFixed(2)}</div>
-        <div>UAH / GBP ${fx.rates.GBP.toFixed(2)}</div>
+        <div>1 USD = ${(fx.rates.UAH).toFixed(2)} UAH</div>
+        <div>1 EUR = ${(fx.rates.UAH / fx.rates.EUR).toFixed(2)} UAH</div>
+        <div>1 PLN = ${(fx.rates.UAH / fx.rates.PLN).toFixed(2)} UAH</div>
+        <div>1 GBP = ${(fx.rates.UAH / fx.rates.GBP).toFixed(2)} UAH</div>
       `;
     }else{
       throw new Error("FX API failed");
