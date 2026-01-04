@@ -15,6 +15,7 @@ canvas {position:fixed; inset:0; z-index:0;}
 #ticker {width:100%; overflow:hidden; background:#1a001a; border-top:1px solid #111; border-bottom:1px solid #111; padding:4px 0; position:relative;}
 #ticker span {display:inline-block; white-space:nowrap; padding-left:100%; animation: ticker 60s linear infinite; font-size:13px;}
 @keyframes ticker {from{transform:translateX(0);} to{transform:translateX(-100%);}}
+#alerts {width:90%; max-width:720px; background:#220022; border:1px solid #330033; padding:6px; margin:10px 0; text-align:center; font-size:12px; line-height:1.3;}
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px;}
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
 #footer {font-size:10px; opacity:0.4; margin:12px 0;}
@@ -31,6 +32,8 @@ canvas {position:fixed; inset:0; z-index:0;}
 
   <div class="section" id="fx"></div>
   <div class="section" id="metals"></div>
+
+  <div id="alerts">Loading alerts...</div>
 
   <div id="analytics"></div>
 
@@ -58,7 +61,7 @@ function loadFX(){document.getElementById("fx").innerHTML='<div>UAH / USD 36.85<
 function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
 loadFX(); loadMetals();
 
-// ================= CRYPTO TICKER & ANALYTICS =================
+// ================= CRYPTO TICKER & ANALYTICS & ALERTS =================
 async function loadCrypto(){
   try{
     const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","LTCUSDT","DASHUSDT"];
@@ -74,18 +77,14 @@ async function loadCrypto(){
       return `<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`;
     }).join("");
 
-    // ================= Volatility & Fear/Greed & Session =================
-    // Volatility простий приклад: std deviation / price (спрощено)
-    const cryptoVol = Math.max(...data.map(c=>parseFloat(c.priceChangePercent))).toFixed(2) + "%";
-    const metalsVol = "0.5%"; // спрощено, можна замінити реальними даними
-    const fxVol = "0.3%"; // спрощено
-    // Fear & Greed API
+    // Volatility & Fear/Greed & Session
+    const cryptoVol = Math.max(...data.map(c=>Math.abs(parseFloat(c.priceChangePercent)))).toFixed(2) + "%";
+    const metalsVol = "0.5%"; 
+    const fxVol = "0.3%";
     const fngRes = await fetch("https://api.alternative.me/fng/?limit=1");
     const fngData = await fngRes.json();
     const fngIndex = fngData.data[0].value;
     const fngText = fngData.data[0].value_classification;
-
-    // Market Session (Asia, Europe, US)
     const now = new Date(); 
     const hours = now.getUTCHours();
     let session = "Unknown";
@@ -98,6 +97,15 @@ async function loadCrypto(){
       `<div>- Індекс страху та жадібності: ${fngIndex} (${fngText})</div>` +
       `<div>- Поточна сесія: ${session}</div>`;
 
+    // ================= Alerts =================
+    let alerts = [];
+    data.forEach(c=>{
+      if(Math.abs(parseFloat(c.priceChangePercent))>5) alerts.push(`${c.symbol.replace("USDT","")} price change >5%`);
+    });
+    if(parseFloat(cryptoVol)>5) alerts.push(`High Crypto Volatility: ${cryptoVol}`);
+    if(fngText.includes("Extreme")) alerts.push(`Fear & Greed Extreme: ${fngText}`);
+    document.getElementById("alerts").innerText = alerts.length ? alerts.join(" | ") : "No alerts";
+
   }catch(err){
     console.log(err);
     document.getElementById("tickerText").innerText="Crypto data unavailable";
@@ -108,6 +116,7 @@ async function loadCrypto(){
       <div>- Індекс страху та жадібності: unavailable</div>
       <div>- Поточна сесія: unavailable</div>
     `;
+    document.getElementById("alerts").innerText="Alerts unavailable";
   }
 }
 loadCrypto();
