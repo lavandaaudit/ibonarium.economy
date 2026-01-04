@@ -4,13 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IBONARIUM • economy.signal</title>
-
 <style>
 * {margin:0; padding:0; box-sizing:border-box;}
 html, body {width:100%; height:100%; background:#000; font-family:"Times New Roman", serif; color:#9fe7ff; overflow-x:hidden;}
 canvas {position:fixed; inset:0; z-index:0;}
-.wrapper {position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; padding:20px; gap:10px; text-align:center; line-height:1.2; font-size:12px;}
-#header-gif {max-width:180px; border-radius:6px; background:linear-gradient(180deg, #000, #4b0082); padding:6px;}
+.wrapper {position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; padding:20px; gap:6px; text-align:center; font-size:12px; line-height:1.2;}
+#header-gif {max-width:200px; border-radius:6px; background:linear-gradient(180deg, #000, #4b0082); padding:6px;}
 #header-caption {font-size:10px; opacity:0.5; margin-bottom:10px;}
 .section {width:90%; max-width:720px; margin:4px 0; display:flex; flex-wrap:wrap; justify-content:space-between;}
 .section div {margin:2px 6px; font-size:12px; line-height:1.2;}
@@ -23,7 +22,6 @@ canvas {position:fixed; inset:0; z-index:0;}
 @media(max-width:600px){.chart{height:240px;}}
 </style>
 </head>
-
 <body>
 <canvas id="stars"></canvas>
 
@@ -36,12 +34,7 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div class="section" id="fx"></div>
   <div class="section" id="metals"></div>
 
-  <div id="analytics">
-    <div id="volume24h">- Об’єм торгів за 24h: loading...</div>
-    <div id="percentChange">- % зміна: loading...</div>
-    <div id="volatility">- Волатильність (Crypto / Metals / FX): loading...</div>
-    <div id="fearGreed">- Індекс страху та жадібності: loading...</div>
-  </div>
+  <div id="analytics"></div>
 
   <div id="chartBTC" class="chart"></div>
   <div id="chartETH" class="chart"></div>
@@ -67,35 +60,27 @@ function loadFX(){document.getElementById("fx").innerHTML='<div>UAH / USD 36.85<
 function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
 loadFX(); loadMetals();
 
-// ================= CRYPTO TICKER (Binance) =================
+// ================= CRYPTO TICKER & ANALYTICS (Binance) =================
 async function loadCrypto(){
   try{
     const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","LTCUSDT","DASHUSDT","ADAUSDT","BNBUSDT","DOTUSDT","DOGEUSDT","AVAXUSDT","MATICUSDT","LINKUSDT","TRXUSDT","XLMUSDT","UNIUSDT","ATOMUSDT","VETUSDT","FILUSDT","ICPUSDT"];
     const promises = symbols.map(sym => fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`).then(res=>res.json()));
     const data = await Promise.all(promises);
 
+    // Ticker
     const tickerStr = data.map(c=>`${c.symbol.replace("USDT","")} ${parseFloat(c.lastPrice).toLocaleString()} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%)`).join(" • ");
     document.getElementById("tickerText").innerText = tickerStr;
 
-    // Analytics
-    document.getElementById("volume24h").innerText="- Об’єм торгів за 24h: " + data.map(c=>`${c.symbol.replace("USDT","")}:${parseFloat(c.volume).toLocaleString()}`).join(" | ");
-    document.getElementById("percentChange").innerText="- % зміна за день: " + data.map(c=>`${c.symbol.replace("USDT","")}:${parseFloat(c.priceChangePercent).toFixed(2)}%`).join(" | ");
-    const prices = data.map(c=>parseFloat(c.lastPrice));
-    const vol = Math.max(...prices)-Math.min(...prices);
-    document.getElementById("volatility").innerText="- Волатильність (Crypto / Metals / FX): " + vol.toFixed(2);
-
-    // Fear & Greed
-    const fgRes = await fetch("https://api.alternative.me/fng/?limit=1");
-    const fgData = await fgRes.json();
-    document.getElementById("fearGreed").innerText="- Індекс страху та жадібності: " + fgData.data[0].value + " (" + fgData.data[0].value_classification + ")";
+    // Analytics Panel
+    const analytics = data.map(c=>{
+      return `<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`;
+    }).join("");
+    document.getElementById("analytics").innerHTML=analytics;
 
   }catch(err){
     console.log(err);
     document.getElementById("tickerText").innerText="Crypto data unavailable";
-    document.getElementById("volume24h").innerText="- Об’єм торгів за 24h: unavailable";
-    document.getElementById("percentChange").innerText="- % зміна: unavailable";
-    document.getElementById("volatility").innerText="- Волатильність: unavailable";
-    document.getElementById("fearGreed").innerText="- Індекс страху та жадібності: unavailable";
+    document.getElementById("analytics").innerHTML="<div>Data unavailable</div>";
   }
 }
 loadCrypto();
