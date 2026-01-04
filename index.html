@@ -9,35 +9,35 @@
 html, body {width:100%; height:100%; background:#000; font-family:"Times New Roman", serif; color:#9fe7ff; overflow-x:hidden;}
 canvas {position:fixed; inset:0; z-index:0;}
 .wrapper {position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; padding:20px; gap:6px; text-align:center; font-size:13px; line-height:1.3;}
-#header-title {font-size:20px; font-weight:bold; margin-bottom:10px;}
+#header-title {font-size:22px; font-weight:bold; margin-bottom:10px;}
 .section {width:90%; max-width:720px; margin:4px 0; display:flex; flex-wrap:wrap; justify-content:space-between;}
 .section div {margin:2px 6px; font-size:12px; line-height:1.2;}
 #ticker {width:100%; overflow:hidden; background:#1a001a; border-top:1px solid #111; border-bottom:1px solid #111; padding:4px 0; position:relative;}
 #ticker span {display:inline-block; white-space:nowrap; padding-left:100%; animation: ticker 60s linear infinite; font-size:13px;}
 @keyframes ticker {from{transform:translateX(0);} to{transform:translateX(-100%);}}
-#alerts {width:90%; max-width:720px; padding:6px; margin:10px 0; text-align:center; font-size:12px; line-height:1.3; position:relative;}
-.alert {display:inline-block; padding:4px 8px; margin:2px; border-radius:6px; color:#fff; font-weight:bold; opacity:0.9; transition:opacity 1s;}
-.alert.up {background:#1ecc1e;} 
-.alert.down {background:#e01e1e;}
+#alerts {width:90%; max-width:720px; padding:8px; margin:12px 0; text-align:center; font-size:13px; line-height:1.3; position:relative;}
+.alert {
+  display:inline-block;
+  padding:10px 16px;
+  margin:4px;
+  border-radius:12px;
+  color:#fff;
+  font-weight:bold;
+  opacity:0.9;
+  font-family:"Courier New", monospace;
+  font-size:14px;
+  transition:opacity 1s, transform 0.3s;
+  animation: neonPulse 1.2s infinite alternate;
+}
+.alert.up {background:linear-gradient(90deg,#00ff00,#00aa00);}
+.alert.down {background:linear-gradient(90deg,#ff0000,#aa0000);}
+@keyframes neonPulse {
+  0% {text-shadow:0 0 4px #fff,0 0 10px #0ff,0 0 20px #0ff,0 0 40px #0ff;}
+  50% {text-shadow:0 0 8px #fff,0 0 20px #0ff,0 0 40px #0ff,0 0 60px #0ff;}
+  100% {text-shadow:0 0 4px #fff,0 0 10px #0ff,0 0 20px #0ff,0 0 40px #0ff;}
+}
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px;}
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
-#systemButton {
-  display:inline-block;
-  padding:8px 16px;
-  margin:10px 0;
-  border-radius:10px;
-  font-size:14px;
-  font-weight:bold;
-  letter-spacing:0.5px;
-  background: linear-gradient(90deg, #ff00ff, #00ffff);
-  color:#000;
-  text-shadow:0 0 5px #fff;
-  box-shadow:0 0 20px #ff00ff, 0 0 30px #00ffff inset;
-  animation: pulse 2s infinite;
-  cursor:default;
-  user-select:none;
-}
-@keyframes pulse {0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
 #footer {font-size:10px; opacity:0.4; margin:12px 0;}
 @media(max-width:600px){.chart{height:240px;}}
 </style>
@@ -54,8 +54,6 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div class="section" id="metals"></div>
 
   <div id="alerts"></div>
-
-  <div id="systemButton">Система в нормі ✅</div>
 
   <div id="analytics"></div>
 
@@ -79,43 +77,51 @@ function draw(){ctx.fillStyle="#000"; ctx.fillRect(0,0,W,H); ctx.fillStyle="#9fe
 draw();
 
 // ================= FX & Metals =================
-function loadFX(){
-  // повертаємо курси у форматі 1 $ = ... грн
-  document.getElementById("fx").innerHTML=
-    `<div>1 USD = 36.85 грн</div>
-     <div>1 EUR = 40.20 грн</div>
-     <div>1 PLN = 9.10 грн</div>
-     <div>1 GBP = 44.00 грн</div>`;
+async function loadFX(){
+  try{
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const fx = await res.json();
+    if(fx.result==="success"){
+      document.getElementById("fx").innerHTML = `
+        <div>1 USD = ${(fx.rates.UAH).toFixed(2)} UAH</div>
+        <div>1 EUR = ${(fx.rates.UAH / fx.rates.EUR).toFixed(2)} UAH</div>
+        <div>1 PLN = ${(fx.rates.UAH / fx.rates.PLN).toFixed(2)} UAH</div>
+        <div>1 GBP = ${(fx.rates.UAH / fx.rates.GBP).toFixed(2)} UAH</div>
+      `;
+    }else{throw new Error("FX API failed");}
+  }catch(err){console.log(err); document.getElementById("fx").innerHTML="FX data unavailable";}
 }
 function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
 loadFX(); loadMetals();
+setInterval(loadFX,300000);
 
 // ================= CRYPTO TICKER & ANALYTICS & ALERTS =================
 async function loadCrypto(){
   try{
     const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","LTCUSDT","DASHUSDT"];
-    const promises = symbols.map(sym=>fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`).then(res=>res.json()));
+    const promises = symbols.map(sym => fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`).then(res=>res.json()));
     const data = await Promise.all(promises);
 
     const tickerStr = data.map(c=>`${c.symbol.replace("USDT","")} ${parseFloat(c.lastPrice).toLocaleString()} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%)`).join(" • ");
     document.getElementById("tickerText").innerText = tickerStr;
 
-    const analytics = data.map(c=>`<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`).join("");
+    const analytics = data.map(c=>{
+      return `<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`;
+    }).join("");
 
     const cryptoVol = Math.max(...data.map(c=>Math.abs(parseFloat(c.priceChangePercent)))).toFixed(2) + "%";
-    const metalsVol = "0.5%"; const fxVol = "0.3%";
-
+    const metalsVol = "0.5%"; 
+    const fxVol = "0.3%";
     const fngRes = await fetch("https://api.alternative.me/fng/?limit=1");
     const fngData = await fngRes.json();
     const fngIndex = fngData.data[0].value;
     const fngText = fngData.data[0].value_classification;
-
     const now = new Date(); 
     const hours = now.getUTCHours();
-    let session = "Невідома сесія";
-    if(hours>=0 && hours<9) session="Азіатська сесія";
-    else if(hours>=7 && hours<16) session="Європейська сесія";
-    else if(hours>=13 && hours<22) session="US сесія";
+    let session = "Unknown";
+    if(hours>=0 && hours<9) session="Asia Session";
+    else if(hours>=7 && hours<16) session="Europe Session";
+    else if(hours>=13 && hours<22) session="US Session";
 
     document.getElementById("analytics").innerHTML = analytics + 
       `<div>- Волатильність: Crypto ${cryptoVol} / Metals ${metalsVol} / FX ${fxVol}</div>` +
@@ -124,23 +130,31 @@ async function loadCrypto(){
 
     const alertsContainer = document.getElementById("alerts");
     alertsContainer.innerHTML = "";
-    let systemStatus = "Система в нормі ✅";
-
     data.forEach(c=>{
       const change = parseFloat(c.priceChangePercent);
       if(Math.abs(change)>5){
         const div = document.createElement("div");
-        div.classList.add("alert", change>0?"up":"down");
-        div.innerText = `${c.symbol.replace("USDT","")} ${change>0?'↑':'↓'} ${change.toFixed(2)}%`;
+        div.classList.add("alert");
+        div.classList.add(change>0 ? "up" : "down");
+        div.innerText = `${c.symbol.replace("USDT","")} ${change>0 ? '↑' : '↓'} ${change.toFixed(2)}%`;
         alertsContainer.appendChild(div);
         setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
-        systemStatus = "Висока волатильність ⚠️";
       }
     });
-
-    if(fngText.includes("Extreme")) systemStatus = "Extreme Fear & Greed 🔴";
-
-    document.getElementById("systemButton").innerText = systemStatus;
+    if(parseFloat(cryptoVol)>5){
+      const div = document.createElement("div");
+      div.classList.add("alert","up");
+      div.innerText = `High Crypto Volatility: ${cryptoVol}`;
+      alertsContainer.appendChild(div);
+      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
+    }
+    if(fngText.includes("Extreme")){
+      const div = document.createElement("div");
+      div.classList.add("alert","down");
+      div.innerText = `Fear & Greed Extreme: ${fngText}`;
+      alertsContainer.appendChild(div);
+      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
+    }
 
   }catch(err){
     console.log(err);
@@ -153,7 +167,6 @@ async function loadCrypto(){
       <div>- Поточна сесія: unavailable</div>
     `;
     document.getElementById("alerts").innerText="Alerts unavailable";
-    document.getElementById("systemButton").innerText = "Система недоступна ❌";
   }
 }
 loadCrypto();
