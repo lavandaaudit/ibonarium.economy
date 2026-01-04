@@ -6,88 +6,79 @@
 <title>IBONARIUM • economy.signal</title>
 
 <style>
-html, body {
-  margin:0;
-  padding:0;
-  background: radial-gradient(circle at center,#111 0%,#000 70%);
-  color:#d0d0d0;
-  font-family:"Courier New", monospace;
-}
+* {margin:0; padding:0; box-sizing:border-box;}
+html, body {width:100%; height:100%; background:#000; color:#9fe7ff; font-family:"Courier New", monospace; overflow-x:hidden;}
+canvas {position:fixed; inset:0; z-index:0;}
 
-#wrap {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ===== TICKER ===== */
-#ticker {
-  width:100%;
-  overflow:hidden;
-  background:#000;
-  border-top:1px solid #111;
-  padding:4px 0;
-  position:fixed;
-  bottom:0;
-}
-
-#ticker span {
-  display:inline-block;
-  white-space:nowrap;
-  padding-left:100%;
-  animation: ticker 40s linear infinite;
-  font-size:13px;
-}
-
-@keyframes ticker {
-  from {transform:translateX(0);}
-  to {transform:translateX(-100%);}
-}
-
-/* ===== CONTENT ===== */
-.section {
+.wrapper {
+  position: relative;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px;
+  gap:16px;
   text-align:center;
-  margin:18px 0;
 }
 
-h2 {
-  font-size:13px;
-  color:#777;
-  margin-bottom:6px;
-  font-weight: normal;
-}
+/* GIF Header */
+#header-gif {max-width:120px; margin-top:10px;}
+#header-caption {font-size:10px; opacity:0.5; margin-bottom:12px;}
 
-.data div {
-  font-size:15px;
-  line-height:1.7;
-}
+/* FX & Metals */
+.section {width:90%; max-width:720px; margin:6px 0; display:flex; flex-wrap:wrap; justify-content:space-between; font-size:14px;}
+.section div {margin:2px 6px;}
 
-/* ===== CHARTS ===== */
-.chart {
-  width:92vw;
-  max-width:720px;
-  height:360px;
-  margin:20px 0;
-  border:1px solid #111;
-}
+/* Ticker */
+#ticker {width:100%; overflow:hidden; background:#000; border-top:1px solid #111; padding:4px 0; position:relative;}
+#ticker span {display:inline-block; white-space:nowrap; padding-left:100%; animation: ticker 60s linear infinite; font-size:13px;}
+@keyframes ticker {from{transform:translateX(0);} to{transform:translateX(-100%);}}
+
+/* Charts */
+.chart {width:92vw; max-width:720px; height:360px; margin:20px 0; border:1px solid #111;}
+
+/* Footer */
+#footer {font-size:10px; opacity:0.4; margin:12px 0;}
+@media (max-width:600px){.section{font-size:12px;}}
 </style>
 </head>
 
 <body>
-<div id="wrap">
+<canvas id="stars"></canvas>
 
-  <div class="section">
-    <h2>UAH / FX</h2>
-    <div id="fx" class="data">loading...</div>
+<div class="wrapper">
+  <!-- Header GIF -->
+  <img src="1.gif" alt="header" id="header-gif">
+  <div id="header-caption">lavanda audit monito lab live</div>
+
+  <!-- Ticker -->
+  <div id="ticker"><span id="tickerText">LOADING CRYPTO DATA...</span></div>
+
+  <!-- FX -->
+  <div class="section" id="fx">
+    <div>UAH / USD 36.85</div>
+    <div>UAH / EUR 40.20</div>
+    <div>UAH / PLN 9.10</div>
+    <div>UAH / GBP 9.10</div>
   </div>
 
-  <div class="section">
-    <h2>METALS / USD (1oz)</h2>
-    <div id="metals" class="data">loading...</div>
+  <!-- Metals -->
+  <div class="section" id="metals">
+    <div>XAU 4300</div>
+    <div>XAG 73</div>
+    <div>XPT 2150</div>
+    <div>XPD 1620</div>
   </div>
 
+  <!-- Analytics -->
+  <div class="section">
+    <div>- Об’єм торгів за 24h (BTC, ETH…)</div>
+    <div>- % зміна за день / 7 днів / місяць</div>
+    <div>- Волатильність (Crypto / Metals / FX)</div>
+    <div>- Індекс страху та жадібності</div>
+  </div>
+
+  <!-- TradingView Charts -->
   <div id="chartBTC" class="chart"></div>
   <div id="chartETH" class="chart"></div>
   <div id="chartSOL" class="chart"></div>
@@ -95,77 +86,48 @@ h2 {
   <div id="chartLTC" class="chart"></div>
   <div id="chartDASH" class="chart"></div>
 
+  <!-- Footer -->
+  <div id="footer">© IBONARIUM • last update: <span id="lastUpdate"></span></div>
 </div>
 
-<div id="ticker"><span id="tickerText">LOADING TICKER...</span></div>
-
 <script>
-/* ================= FX NBU ================= */
-async function loadFX(){
-  try{
-    const r = await fetch("https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json");
-    const d = await r.json();
-    const f = d.filter(x => ["USD","EUR","PLN"].includes(x.cc));
-    fx.innerHTML = f.map(x => `<div>${x.cc} ${x.rate.toFixed(2)} UAH</div>`).join("");
-  }catch{
-    fx.innerHTML="<div>NO DATA</div>";
-  }
-}
+// ================= STARS BACKGROUND =================
+const s=document.getElementById("stars"); const ctx=s.getContext("2d");
+let W,H,stars=[];
+function resize(){W=s.width=innerWidth; H=s.height=innerHeight; stars=Array.from({length:160},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*W}));}
+resize(); window.addEventListener("resize",resize);
+function draw(){ctx.fillStyle="#000"; ctx.fillRect(0,0,W,H); ctx.fillStyle="#4dd2ff"; stars.forEach(st=>{st.z-=0.2; if(st.z<=0) st.z=W; const k=128/st.z; const x=(st.x-W/2)*k+W/2; const y=(st.y-H/2)*k+H/2; if(x>0&&x<W&&y>0&&y<H){const size=(1-st.z/W)*2; ctx.fillRect(x,y,size,size);}}); requestAnimationFrame(draw);}
+draw();
 
-/* ================= METALS ================= */
-async function loadMetals(){
-  try{
-    const metalsData = [
-      {symbol:"XAU",price:4300},
-      {symbol:"XAG",price:73},
-      {symbol:"XPT",price:2150},
-      {symbol:"XPD",price:1620}
-    ];
-    metals.innerHTML = metalsData.map(m => `<div>${m.symbol} ${m.price.toFixed(2)} USD</div>`).join("");
-  }catch{
-    metals.innerHTML="<div>NO DATA</div>";
-  }
-}
+// ================= FX & Metals =================
+function loadFX(){document.getElementById("fx").innerHTML='<div>UAH / USD 36.85</div><div>UAH / EUR 40.20</div><div>UAH / PLN 9.10</div><div>UAH / GBP 9.10</div>';}
+function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
+loadFX(); loadMetals();
 
-/* ================= TICKER ================= */
-function startTicker(){
-  tickerText.innerText = "IBONARIUM ECONOMY SIGNAL • FX & METALS LIVE • BTC ETH SOL XRP LTC DASH";
+// ================= CRYPTO TICKER =================
+function updateTicker(){
+  // Показуємо 20 криптовалют для прикладу
+  const coins=["BTC","ETH","SOL","XRP","LTC","DASH","ADA","BNB","DOT","DOGE","AVAX","MATIC","LINK","TRX","XLM","UNI","ATOM","VET","FIL","ICP"];
+  const tickerStr = coins.map(c=>`${c} 0.00 USD (0.00%)`).join(" • ");
+  document.getElementById("tickerText").innerText=tickerStr;
 }
+updateTicker();
 
-/* ================= START ================= */
-loadFX();
-loadMetals();
-startTicker();
-setInterval(loadFX,60000);
-setInterval(loadMetals,300000);
+// ================= LAST UPDATE =================
+function updateTime(){document.getElementById("lastUpdate").innerText=new Date().toLocaleTimeString();}
+updateTime(); setInterval(updateTime,60000);
+
+// ================= TRADINGVIEW =================
+const tv = [
+  {id:"chartBTC", symbol:"BTCUSD"},
+  {id:"chartETH", symbol:"ETHUSD"},
+  {id:"chartSOL", symbol:"SOLUSD"},
+  {id:"chartXRP", symbol:"XRPUSD"},
+  {id:"chartLTC", symbol:"LTCUSD"},
+  {id:"chartDASH", symbol:"DASHUSD"}
+];
+const script=document.createElement("script"); script.src="https://s3.tradingview.com/tv.js"; script.onload=()=>{tv.forEach(c=>{new TradingView.widget({container_id:c.id,autosize:true,symbol:c.symbol,interval:"60",timezone:"Europe/Kiev",theme:"dark",style:"1",locale:"en",hide_top_toolbar:true,hide_side_toolbar:true,allow_symbol_change:true});});};
+document.body.appendChild(script);
 </script>
-
-<!-- ================= TRADINGVIEW ================= -->
-<script src="https://s3.tradingview.com/tv.js"></script>
-<script>
-function createTradingView(container, symbol){
-  new TradingView.widget({
-    container_id: container,
-    autosize: true,
-    symbol: symbol,
-    interval: "60",
-    timezone: "Europe/Kiev",
-    theme: "dark",
-    style: "1",
-    locale: "en",
-    hide_top_toolbar:true,
-    hide_side_toolbar:true,
-    allow_symbol_change:true
-  });
-}
-
-createTradingView("chartBTC","BTCUSD");
-createTradingView("chartETH","ETHUSD");
-createTradingView("chartSOL","SOLUSD");
-createTradingView("chartXRP","XRPUSD");
-createTradingView("chartLTC","LTCUSD");
-createTradingView("chartDASH","DASHUSD");
-</script>
-
 </body>
 </html>
