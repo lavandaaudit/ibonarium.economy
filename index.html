@@ -9,16 +9,16 @@
 html, body {width:100%; height:100%; background:#000; font-family:"Times New Roman", serif; color:#9fe7ff; overflow-x:hidden;}
 canvas {position:fixed; inset:0; z-index:0;}
 .wrapper {position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; padding:20px; gap:6px; text-align:center; font-size:13px; line-height:1.3;}
-#header-title {font-size:20px; font-weight:bold; margin-bottom:10px;}
+#header-title {font-size:22px; font-weight:bold; margin-bottom:10px;}
 .section {width:90%; max-width:720px; margin:4px 0; display:flex; flex-wrap:wrap; justify-content:space-between;}
 .section div {margin:2px 6px; font-size:12px; line-height:1.2;}
 #ticker {width:100%; overflow:hidden; background:#1a001a; border-top:1px solid #111; border-bottom:1px solid #111; padding:4px 0; position:relative;}
 #ticker span {display:inline-block; white-space:nowrap; padding-left:100%; animation: ticker 60s linear infinite; font-size:13px;}
 @keyframes ticker {from{transform:translateX(0);} to{transform:translateX(-100%);}}
 #alerts {width:90%; max-width:720px; padding:6px; margin:10px 0; text-align:center; font-size:12px; line-height:1.3; position:relative;}
-.alert {display:inline-block; padding:4px 8px; margin:2px; border-radius:4px; color:#fff; font-weight:bold; opacity:0.9; transition:opacity 1s;}
-.alert.up {background:#1ecc1e;} 
-.alert.down {background:#e01e1e;}
+.alert {display:inline-block; padding:6px 12px; margin:2px; border-radius:8px; color:#fff; font-weight:bold; opacity:0.9; transition:opacity 1s, transform 0.3s; font-family:"Courier New", monospace;}
+.alert.up {background:linear-gradient(90deg,#00ff00,#00aa00); transform:rotate(-2deg);}
+.alert.down {background:linear-gradient(90deg,#ff0000,#aa0000); transform:rotate(2deg);}
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px;}
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
 #footer {font-size:10px; opacity:0.4; margin:12px 0;}
@@ -33,7 +33,7 @@ canvas {position:fixed; inset:0; z-index:0;}
 
   <div id="ticker"><span id="tickerText">LOADING CRYPTO DATA...</span></div>
 
-  <div class="section" id="fx">Loading FX rates...</div>
+  <div class="section" id="fx"></div>
   <div class="section" id="metals"></div>
 
   <div id="alerts"></div>
@@ -62,22 +62,28 @@ draw();
 // ================= FX & Metals =================
 async function loadFX(){
   try{
-    const res = await fetch('https://api.exchangerate.host/latest?base=UAH&symbols=USD,EUR,PLN,GBP');
+    const res = await fetch('https://open.er-api.com/v6/latest/UAH');
     const fx = await res.json();
-    document.getElementById("fx").innerHTML = `
-      <div>UAH / USD ${fx.rates.USD.toFixed(2)}</div>
-      <div>UAH / EUR ${fx.rates.EUR.toFixed(2)}</div>
-      <div>UAH / PLN ${fx.rates.PLN.toFixed(2)}</div>
-      <div>UAH / GBP ${fx.rates.GBP.toFixed(2)}</div>
-    `;
+    if(fx.result==="success"){
+      document.getElementById("fx").innerHTML = `
+        <div>UAH / USD ${fx.rates.USD.toFixed(2)}</div>
+        <div>UAH / EUR ${fx.rates.EUR.toFixed(2)}</div>
+        <div>UAH / PLN ${fx.rates.PLN.toFixed(2)}</div>
+        <div>UAH / GBP ${fx.rates.GBP.toFixed(2)}</div>
+      `;
+    }else{
+      throw new Error("FX API failed");
+    }
   }catch(err){
     console.log(err);
     document.getElementById("fx").innerHTML="FX data unavailable";
   }
 }
+
 function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
+
 loadFX(); loadMetals();
-setInterval(loadFX,300000); // обновлюємо раз на 5 хв
+setInterval(loadFX,300000); // обновлення курсу кожні 5 хв
 
 // ================= CRYPTO TICKER & ANALYTICS & ALERTS =================
 async function loadCrypto(){
