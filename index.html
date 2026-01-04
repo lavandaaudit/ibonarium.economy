@@ -38,21 +38,36 @@ canvas {position:fixed; inset:0; z-index:0;}
 }
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px;}
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
+
+/* ================= SYSTEM BUTTON ================= */
 #systemButton {
-  display:inline-block;
-  padding:10px 20px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:160px;
+  height:50px;
   margin:10px 0;
-  border-radius:12px;
-  font-size:15px;
+  border-radius:25px;
+  border:2px solid #0ff;
+  background:rgba(0,255,255,0.05);
+  color:#0ff;
+  font-size:16px;
   font-weight:bold;
-  letter-spacing:0.5px;
-  background:linear-gradient(90deg,#00ff00,#008800);
-  color:#000;
-  text-shadow:0 0 4px #fff;
-  box-shadow:0 0 15px #00ff00 inset;
-  transition: background 5s linear;
-  user-select:none;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  text-shadow:0 0 6px #0ff,0 0 12px #0ff;
+  box-shadow:0 0 12px #0ff inset, 0 0 20px #0ff;
+  cursor:default;
+  transition: all 1s ease;
+  animation: pulseNeon 2s infinite alternate;
 }
+@keyframes pulseNeon {
+  0% {box-shadow:0 0 6px #0ff inset, 0 0 20px #0ff; text-shadow:0 0 4px #0ff,0 0 10px #0ff;}
+  50% {box-shadow:0 0 12px #0ff inset, 0 0 40px #0ff; text-shadow:0 0 8px #0ff,0 0 20px #0ff;}
+  100% {box-shadow:0 0 6px #0ff inset, 0 0 20px #0ff; text-shadow:0 0 4px #0ff,0 0 10px #0ff;}
+}
+
 #footer {font-size:10px; opacity:0.4; margin:12px 0;}
 @media(max-width:600px){.chart{height:240px;}}
 </style>
@@ -150,18 +165,21 @@ async function loadCrypto(){
     alertsContainer.innerHTML = "";
 
     let stateText = "Норма";
-    let stateColor = "#00ff00";
+    let stateColor = "#0ff"; // default neon cyan
 
     if(fngText.includes("Extreme") || parseFloat(cryptoVol) > 5) {
       stateText = "Страх";
-      stateColor = "#ff0000";
+      stateColor = "#ff00ff"; // neon magenta for fear
     } else if(fngText.includes("Greed")) {
       stateText = "Жадібність";
-      stateColor = "#00ffff";
+      stateColor = "#00ff00"; // neon green for greed
     }
 
-    document.getElementById("systemButton").innerText = stateText;
-    document.getElementById("systemButton").style.background = `linear-gradient(90deg, ${stateColor}, #000000)`;
+    const btn = document.getElementById("systemButton");
+    btn.innerText = stateText;
+    btn.style.borderColor = stateColor;
+    btn.style.textShadow = `0 0 6px ${stateColor}, 0 0 12px ${stateColor}`;
+    btn.style.boxShadow = `0 0 12px ${stateColor} inset, 0 0 20px ${stateColor}`;
 
     data.forEach(c=>{
       const change = parseFloat(c.priceChangePercent);
@@ -186,8 +204,12 @@ async function loadCrypto(){
       <div>- Поточна сесія: unavailable</div>
     `;
     document.getElementById("alerts").innerText="Alerts unavailable";
-    document.getElementById("systemButton").innerText="Норма";
-    document.getElementById("systemButton").style.background="linear-gradient(90deg,#00ff00,#000000)";
+
+    const btn = document.getElementById("systemButton");
+    btn.innerText="Норма";
+    btn.style.borderColor="#0ff";
+    btn.style.textShadow="0 0 6px #0ff, 0 0 12px #0ff";
+    btn.style.boxShadow="0 0 12px #0ff inset, 0 0 20px #0ff";
   }
 }
 loadCrypto();
