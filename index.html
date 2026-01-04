@@ -15,7 +15,10 @@ canvas {position:fixed; inset:0; z-index:0;}
 #ticker {width:100%; overflow:hidden; background:#1a001a; border-top:1px solid #111; border-bottom:1px solid #111; padding:4px 0; position:relative;}
 #ticker span {display:inline-block; white-space:nowrap; padding-left:100%; animation: ticker 60s linear infinite; font-size:13px;}
 @keyframes ticker {from{transform:translateX(0);} to{transform:translateX(-100%);}}
-#alerts {width:90%; max-width:720px; background:#220022; border:1px solid #330033; padding:6px; margin:10px 0; text-align:center; font-size:12px; line-height:1.3;}
+#alerts {width:90%; max-width:720px; padding:6px; margin:10px 0; text-align:center; font-size:12px; line-height:1.3; position:relative;}
+.alert {display:inline-block; padding:4px 8px; margin:2px; border-radius:4px; color:#fff; font-weight:bold; opacity:0.9; transition:opacity 1s;}
+.alert.up {background:#1ecc1e;} 
+.alert.down {background:#e01e1e;}
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px;}
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
 #footer {font-size:10px; opacity:0.4; margin:12px 0;}
@@ -33,7 +36,7 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div class="section" id="fx"></div>
   <div class="section" id="metals"></div>
 
-  <div id="alerts">Loading alerts...</div>
+  <div id="alerts"></div>
 
   <div id="analytics"></div>
 
@@ -77,7 +80,6 @@ async function loadCrypto(){
       return `<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`;
     }).join("");
 
-    // Volatility & Fear/Greed & Session
     const cryptoVol = Math.max(...data.map(c=>Math.abs(parseFloat(c.priceChangePercent)))).toFixed(2) + "%";
     const metalsVol = "0.5%"; 
     const fxVol = "0.3%";
@@ -98,13 +100,33 @@ async function loadCrypto(){
       `<div>- Поточна сесія: ${session}</div>`;
 
     // ================= Alerts =================
-    let alerts = [];
+    const alertsContainer = document.getElementById("alerts");
+    alertsContainer.innerHTML = "";
     data.forEach(c=>{
-      if(Math.abs(parseFloat(c.priceChangePercent))>5) alerts.push(`${c.symbol.replace("USDT","")} price change >5%`);
+      const change = parseFloat(c.priceChangePercent);
+      if(Math.abs(change)>5){
+        const div = document.createElement("div");
+        div.classList.add("alert");
+        div.classList.add(change>0 ? "up" : "down");
+        div.innerText = `${c.symbol.replace("USDT","")} price ${change>0 ? '↑' : '↓'} ${change.toFixed(2)}%`;
+        alertsContainer.appendChild(div);
+        setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},5000);
+      }
     });
-    if(parseFloat(cryptoVol)>5) alerts.push(`High Crypto Volatility: ${cryptoVol}`);
-    if(fngText.includes("Extreme")) alerts.push(`Fear & Greed Extreme: ${fngText}`);
-    document.getElementById("alerts").innerText = alerts.length ? alerts.join(" | ") : "No alerts";
+    if(parseFloat(cryptoVol)>5){
+      const div = document.createElement("div");
+      div.classList.add("alert","up");
+      div.innerText = `High Crypto Volatility: ${cryptoVol}`;
+      alertsContainer.appendChild(div);
+      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},5000);
+    }
+    if(fngText.includes("Extreme")){
+      const div = document.createElement("div");
+      div.classList.add("alert","down");
+      div.innerText = `Fear & Greed Extreme: ${fngText}`;
+      alertsContainer.appendChild(div);
+      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},5000);
+    }
 
   }catch(err){
     console.log(err);
