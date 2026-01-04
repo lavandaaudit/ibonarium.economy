@@ -22,6 +22,7 @@ canvas {
   z-index: -1;
 }
 
+/* ===== ЦЕНТР ===== */
 .center {
   position: absolute;
   inset: 0;
@@ -36,16 +37,31 @@ canvas {
   line-height: 1.6;
 }
 
-.title {
-  color: #90caf9;
-  font-size: 11px;
-  letter-spacing: 1px;
-  margin: 14px 0 6px;
-}
-
 .sep {
   opacity: .3;
-  margin: 6px 0;
+  margin: 8px 0;
+}
+
+/* ===== TICKER ===== */
+.ticker {
+  position: fixed;
+  bottom: 18px;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 12px;
+  opacity: .85;
+}
+
+.ticker span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: scroll 30s linear infinite;
+}
+
+@keyframes scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
 }
 </style>
 </head>
@@ -59,9 +75,11 @@ canvas {
     <div id="fx">loading…</div>
     <div class="sep">────────────</div>
     <div id="metals">loading…</div>
-    <div class="sep">────────────</div>
-    <div id="crypto">loading…</div>
   </div>
+</div>
+
+<div class="ticker">
+  <span id="cryptoTicker">CRYPTO SIGNAL LOADING…</span>
 </div>
 
 <script>
@@ -83,47 +101,50 @@ const stars=[...Array(140)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.
   requestAnimationFrame(draw);
 })();
 
-/* ===== NBU (ВАЛЮТИ + МЕТАЛИ) ===== */
+/* ===== NBU ===== */
 async function loadNBU(){
   const r = await fetch('https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json');
   const d = await r.json();
 
-  fx.innerHTML = '<div class="title">ВАЛЮТИ → UAH</div>';
-  metals.innerHTML = '<div class="title">МЕТАЛИ · USD</div>';
+  fx.innerHTML = '';
+  metals.innerHTML = '';
 
   d.forEach(i=>{
-    if(['USD','EUR','GBP','PLN'].includes(i.cc)){
-      fx.innerHTML += `<div>${i.cc} ${i.rate.toFixed(2)}</div>`;
-    }
-    if(['XAU','XAG','XPT','XPD'].includes(i.cc)){
-      metals.innerHTML += `<div>${i.cc} ${i.rate.toFixed(2)}</div>`;
-    }
+    if(['USD','EUR','GBP','PLN'].includes(i.cc))
+      fx.innerHTML += `<div>${i.cc} ${i.rate.toFixed(2)} UAH</div>`;
+
+    if(['XAU','XAG','XPT','XPD'].includes(i.cc))
+      metals.innerHTML += `<div>${i.cc} ${i.rate.toFixed(2)} USD</div>`;
   });
 }
 
-/* ===== CRYPTO (COINCAP) ===== */
-async function loadCrypto(){
-  crypto.innerHTML = '<div class="title">КРИПТО · USD</div>';
+/* ===== CRYPTO TICKER (BINANCE) ===== */
+const symbols = [
+  'BTCUSDT','ETHUSDT','SOLUSDT','LTCUSDT','XRPUSDT','DASHUSDT'
+];
+
+async function loadCryptoTicker(){
   try {
-    const r = await fetch(
-      'https://api.coincap.io/v2/assets?ids=bitcoin,ethereum,solana,litecoin,xrp,dash'
-    );
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price');
     const d = await r.json();
 
-    d.data.forEach(c=>{
-      crypto.innerHTML += `<div>${c.symbol} ${Number(c.priceUsd).toFixed(2)}</div>`;
-    });
+    const filtered = d.filter(i => symbols.includes(i.symbol));
 
+    const text = filtered
+      .map(i => `${i.symbol.replace('USDT','')} ${Number(i.price).toFixed(2)} USD`)
+      .join('   •   ');
+
+    cryptoTicker.textContent = text + '   •   ';
   } catch {
-    crypto.innerHTML += '<div>NO SIGNAL</div>';
+    cryptoTicker.textContent = 'CRYPTO SIGNAL LOST';
   }
 }
 
 /* ===== INIT ===== */
 loadNBU();
-loadCrypto();
+loadCryptoTicker();
 
-setInterval(loadCrypto, 60000);
+setInterval(loadCryptoTicker, 30000);
 </script>
 
 </body>
