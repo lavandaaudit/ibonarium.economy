@@ -22,7 +22,6 @@ canvas {
   z-index: -1;
 }
 
-/* ===== ЦЕНТР ===== */
 .center {
   position: absolute;
   inset: 0;
@@ -31,27 +30,23 @@ canvas {
   justify-content: center;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, auto);
-  gap: 26px 40px;
+.stack {
   text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
-.block h3 {
+.title {
+  color: #90caf9;
   font-size: 11px;
   letter-spacing: 1px;
-  color: #90caf9;
-  margin-bottom: 6px;
+  margin: 14px 0 6px;
 }
 
-.item {
-  font-size: 13px;
-  margin: 3px 0;
-  white-space: nowrap;
-  opacity: .9;
+.sep {
+  opacity: .3;
+  margin: 6px 0;
 }
-.dim { opacity: .4; }
 </style>
 </head>
 
@@ -60,23 +55,12 @@ canvas {
 <canvas id="stars"></canvas>
 
 <div class="center">
-  <div class="grid">
-
-    <div class="block">
-      <h3>ВАЛЮТИ · UAH</h3>
-      <div id="fx" class="dim">loading…</div>
-    </div>
-
-    <div class="block">
-      <h3>МЕТАЛИ · UAH</h3>
-      <div id="metals" class="dim">loading…</div>
-    </div>
-
-    <div class="block">
-      <h3>КРИПТО · USD</h3>
-      <div id="crypto" class="dim">connecting…</div>
-    </div>
-
+  <div class="stack">
+    <div id="fx">loading…</div>
+    <div class="sep">────────────</div>
+    <div id="metals">loading…</div>
+    <div class="sep">────────────</div>
+    <div id="crypto">loading…</div>
   </div>
 </div>
 
@@ -86,7 +70,7 @@ const c = document.getElementById('stars');
 const x = c.getContext('2d');
 function resize(){c.width=innerWidth;c.height=innerHeight;}
 resize(); onresize=resize;
-const stars=[...Array(150)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,z:Math.random()*2}));
+const stars=[...Array(140)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,z:Math.random()*2}));
 (function draw(){
   x.clearRect(0,0,c.width,c.height);
   stars.forEach(s=>{
@@ -99,48 +83,39 @@ const stars=[...Array(150)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.
   requestAnimationFrame(draw);
 })();
 
-/* ===== NBU ===== */
+/* ===== NBU (ВАЛЮТИ + МЕТАЛИ) ===== */
 async function loadNBU(){
   const r = await fetch('https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json');
   const d = await r.json();
 
-  fx.innerHTML='';
-  metals.innerHTML='';
+  fx.innerHTML = '<div class="title">ВАЛЮТИ → UAH</div>';
+  metals.innerHTML = '<div class="title">МЕТАЛИ · USD</div>';
 
   d.forEach(i=>{
-    if(['USD','EUR','GBP','PLN'].includes(i.cc))
-      fx.innerHTML += `<div class="item">${i.cc} ${i.rate.toFixed(2)}</div>`;
-
-    if(['XAU','XAG','XPT','XPD'].includes(i.cc))
-      metals.innerHTML += `<div class="item">${i.cc} ${i.rate.toFixed(2)}</div>`;
+    if(['USD','EUR','GBP','PLN'].includes(i.cc)){
+      fx.innerHTML += `<div>${i.cc} ${i.rate.toFixed(2)}</div>`;
+    }
+    if(['XAU','XAG','XPT','XPD'].includes(i.cc)){
+      metals.innerHTML += `<div>${i.cc} ${i.rate.toFixed(2)}</div>`;
+    }
   });
-
-  fx.classList.remove('dim');
-  metals.classList.remove('dim');
 }
 
-/* ===== CRYPTO (НЕ БЛОКУЄ) ===== */
+/* ===== CRYPTO (COINCAP) ===== */
 async function loadCrypto(){
-  crypto.innerHTML = '<div class="item dim">fetching market…</div>';
-
+  crypto.innerHTML = '<div class="title">КРИПТО · USD</div>';
   try {
     const r = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,litecoin,ripple,dash&vs_currencies=usd'
+      'https://api.coincap.io/v2/assets?ids=bitcoin,ethereum,solana,litecoin,xrp,dash'
     );
     const d = await r.json();
 
-    crypto.innerHTML = `
-      <div class="item">BTC ${d.bitcoin.usd}</div>
-      <div class="item">ETH ${d.ethereum.usd}</div>
-      <div class="item">SOL ${d.solana.usd}</div>
-      <div class="item">LTC ${d.litecoin.usd}</div>
-      <div class="item">XRP ${d.ripple.usd}</div>
-      <div class="item">DASH ${d.dash.usd}</div>
-    `;
-    crypto.classList.remove('dim');
+    d.data.forEach(c=>{
+      crypto.innerHTML += `<div>${c.symbol} ${Number(c.priceUsd).toFixed(2)}</div>`;
+    });
 
   } catch {
-    crypto.innerHTML = '<div class="item dim">no signal</div>';
+    crypto.innerHTML += '<div>NO SIGNAL</div>';
   }
 }
 
