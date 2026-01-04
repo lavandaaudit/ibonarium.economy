@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>IBONARIUM · ECONOMIC SIGNAL</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: black;
+  color: #cfd8dc;
+  overflow: hidden;
+}
+
+/* ===== ЗОРЯНИЙ ФОН ===== */
+canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+/* ===== ЛЕЙАУТ ===== */
+.wrapper {
+  display: flex;
+  height: 100vh;
+}
+
+/* ===== ЛІВА ПАНЕЛЬ ===== */
+.sidebar {
+  width: 340px;
+  padding: 20px;
+  border-right: 1px solid #111;
+  overflow-y: auto;
+}
+
+.block {
+  margin-bottom: 28px;
+}
+
+.block h3 {
+  font-size: 13px;
+  color: #90caf9;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.item {
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+}
+
+/* ===== ПРАВА ЧАСТИНА ===== */
+.main {
+  flex: 1;
+  padding: 24px;
+}
+
+.main h2 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: #ffffffaa;
+}
+
+/* ===== СКРОЛ ===== */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #222;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="wrapper">
+
+  <!-- ===== ЛІВА ПАНЕЛЬ ===== -->
+  <div class="sidebar">
+
+    <div class="block">
+      <h3>ВАЛЮТИ → UAH</h3>
+      <div id="fx"></div>
+    </div>
+
+    <div class="block">
+      <h3>МЕТАЛИ (USD)</h3>
+      <div id="metals"></div>
+    </div>
+
+    <div class="block">
+      <h3>КРИПТОВАЛЮТИ</h3>
+      <div id="crypto"></div>
+    </div>
+
+  </div>
+
+  <!-- ===== ПРАВА ПАНЕЛЬ ===== -->
+  <div class="main">
+    <h2>ECONOMIC SIGNAL / ANALYTICS</h2>
+    <p style="font-size:13px; opacity:.6">
+      Реальні ринкові дані · автооновлення · OSINT режим  
+      <br><br>
+      (тут можеш залишити свої аналітичні модулі як зараз)
+    </p>
+  </div>
+
+</div>
+
+<script>
+/* ================================
+   ЗОРЯНИЙ ФОН
+================================ */
+const c = document.getElementById('stars');
+const ctx = c.getContext('2d');
+let w, h;
+function resize() {
+  w = c.width = window.innerWidth;
+  h = c.height = window.innerHeight;
+}
+window.onresize = resize;
+resize();
+
+const stars = Array.from({length: 160}, () => ({
+  x: Math.random()*w,
+  y: Math.random()*h,
+  z: Math.random()*2 + 0.2
+}));
+
+function drawStars() {
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = 'white';
+  stars.forEach(s => {
+    s.y += s.z;
+    if (s.y > h) s.y = 0;
+    ctx.globalAlpha = s.z / 2;
+    ctx.fillRect(s.x, s.y, 1.2, 1.2);
+  });
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+/* ================================
+   ВАЛЮТИ → UAH
+================================ */
+async function loadFX() {
+  const r = await fetch('https://api.exchangerate.host/latest?base=UAH');
+  const d = await r.json();
+  const list = {USD:'$',EUR:'€',GBP:'£',PLN:'zł'};
+  fx.innerHTML = '';
+  for (let k in list) {
+    fx.innerHTML += `<div class="item"><span>${k}</span><span>${(1/d.rates[k]).toFixed(2)}</span></div>`;
+  }
+}
+
+/* ================================
+   МЕТАЛИ (РЕАЛЬНИЙ РИНОК)
+   🔑 ВСТАВ СВІЙ API КЛЮЧ
+================================ */
+const METALS_KEY = 'PUT_YOUR_API_KEY_HERE';
+
+async function loadMetals() {
+  const r = await fetch(`https://metals-api.com/api/latest?access_key=${METALS_KEY}&base=USD&symbols=XAU,XAG,XPT,XPD`);
+  const d = await r.json();
+  metals.innerHTML = '';
+  if (!d.success) {
+    metals.innerHTML = '<div class="item">NO DATA</div>';
+    return;
+  }
+  for (let m in d.rates) {
+    metals.innerHTML += `<div class="item"><span>${m}</span><span>${d.rates[m].toFixed(2)}</span></div>`;
+  }
+}
+
+/* ================================
+   КРИПТО (COINGECKO)
+================================ */
+async function loadCrypto() {
+  const r = await fetch(
+    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,litecoin,ripple,dash&vs_currencies=usd'
+  );
+  const d = await r.json();
+  crypto.innerHTML = `
+    <div class="item"><span>BTC</span><span>${d.bitcoin.usd}</span></div>
+    <div class="item"><span>ETH</span><span>${d.ethereum.usd}</span></div>
+    <div class="item"><span>SOL</span><span>${d.solana.usd}</span></div>
+    <div class="item"><span>LTC</span><span>${d.litecoin.usd}</span></div>
+    <div class="item"><span>XRP</span><span>${d.ripple.usd}</span></div>
+    <div class="item"><span>DASH</span><span>${d.dash.usd}</span></div>
+  `;
+}
+
+/* ================================
+   ОНОВЛЕННЯ
+================================ */
+async function refresh() {
+  loadFX();
+  loadCrypto();
+  loadMetals();
+}
+
+refresh();
+setInterval(refresh, 60000);
+</script>
+
+</body>
+</html>
