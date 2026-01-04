@@ -37,10 +37,7 @@ canvas {position:fixed; inset:0; z-index:0;}
   cursor:default;
   user-select:none;
 }
-@keyframes pulse {
-  0%,100%{transform:scale(1);}
-  50%{transform:scale(1.05);}
-}
+@keyframes pulse {0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
 #footer {font-size:10px; opacity:0.4; margin:12px 0;}
 @media(max-width:600px){.chart{height:240px;}}
 </style>
@@ -82,18 +79,14 @@ function draw(){ctx.fillStyle="#000"; ctx.fillRect(0,0,W,H); ctx.fillStyle="#9fe
 draw();
 
 // ================= FX & Metals =================
-async function loadFX(){
-  try{
-    const res = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=UAH,EUR,PLN,GBP');
-    const data = await res.json();
-    document.getElementById("fx").innerHTML=
-      `<div>1 USD = ${data.rates.UAH.toFixed(2)} грн</div>
-       <div>1 EUR = ${data.rates.EUR*data.rates.UAH/data.rates.USD.toFixed(2)} грн</div>
-       <div>1 PLN = ${data.rates.PLN*data.rates.UAH/data.rates.USD.toFixed(2)} грн</div>
-       <div>1 GBP = ${data.rates.GBP*data.rates.UAH/data.rates.USD.toFixed(2)} грн</div>`;
-  }catch(err){document.getElementById("fx").innerText="FX data unavailable";}
+function loadFX(){
+  // повертаємо курси у форматі 1 $ = ... грн
+  document.getElementById("fx").innerHTML=
+    `<div>1 USD = 36.85 грн</div>
+     <div>1 EUR = 40.20 грн</div>
+     <div>1 PLN = 9.10 грн</div>
+     <div>1 GBP = 44.00 грн</div>`;
 }
-
 function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
 loadFX(); loadMetals();
 
@@ -107,7 +100,6 @@ async function loadCrypto(){
     const tickerStr = data.map(c=>`${c.symbol.replace("USDT","")} ${parseFloat(c.lastPrice).toLocaleString()} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%)`).join(" • ");
     document.getElementById("tickerText").innerText = tickerStr;
 
-    // Analytics Panel
     const analytics = data.map(c=>`<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`).join("");
 
     const cryptoVol = Math.max(...data.map(c=>Math.abs(parseFloat(c.priceChangePercent)))).toFixed(2) + "%";
@@ -130,16 +122,15 @@ async function loadCrypto(){
       `<div>- Індекс страху та жадібності: ${fngIndex} (${fngText})</div>` +
       `<div>- Поточна сесія: ${session}</div>`;
 
-    // ================= Alerts =================
     const alertsContainer = document.getElementById("alerts");
     alertsContainer.innerHTML = "";
     let systemStatus = "Система в нормі ✅";
+
     data.forEach(c=>{
       const change = parseFloat(c.priceChangePercent);
       if(Math.abs(change)>5){
         const div = document.createElement("div");
-        div.classList.add("alert");
-        div.classList.add(change>0?"up":"down");
+        div.classList.add("alert", change>0?"up":"down");
         div.innerText = `${c.symbol.replace("USDT","")} ${change>0?'↑':'↓'} ${change.toFixed(2)}%`;
         alertsContainer.appendChild(div);
         setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
