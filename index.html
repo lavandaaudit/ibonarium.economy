@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IBONARIUM • economy.signal</title>
+<title>ibonarium•cripto.signal.live</title>
 <style>
 * {margin:0; padding:0; box-sizing:border-box;}
 html, body {width:100%; height:100%; background:#000; font-family:"Times New Roman", serif; color:#9fe7ff; overflow-x:hidden;}
@@ -38,6 +38,21 @@ canvas {position:fixed; inset:0; z-index:0;}
 }
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px;}
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
+#systemButton {
+  display:inline-block;
+  padding:10px 20px;
+  margin:10px 0;
+  border-radius:12px;
+  font-size:15px;
+  font-weight:bold;
+  letter-spacing:0.5px;
+  background:linear-gradient(90deg,#00ff00,#008800);
+  color:#000;
+  text-shadow:0 0 4px #fff;
+  box-shadow:0 0 15px #00ff00 inset;
+  transition: background 5s linear;
+  user-select:none;
+}
 #footer {font-size:10px; opacity:0.4; margin:12px 0;}
 @media(max-width:600px){.chart{height:240px;}}
 </style>
@@ -54,6 +69,8 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div class="section" id="metals"></div>
 
   <div id="alerts"></div>
+
+  <div id="systemButton">Норма</div>
 
   <div id="analytics"></div>
 
@@ -83,10 +100,10 @@ async function loadFX(){
     const fx = await res.json();
     if(fx.result==="success"){
       document.getElementById("fx").innerHTML = `
-        <div>1 USD = ${(fx.rates.UAH).toFixed(2)} UAH</div>
-        <div>1 EUR = ${(fx.rates.UAH / fx.rates.EUR).toFixed(2)} UAH</div>
-        <div>1 PLN = ${(fx.rates.UAH / fx.rates.PLN).toFixed(2)} UAH</div>
-        <div>1 GBP = ${(fx.rates.UAH / fx.rates.GBP).toFixed(2)} UAH</div>
+        <div>1 USD = ${(fx.rates.UAH).toFixed(2)} грн</div>
+        <div>1 EUR = ${(fx.rates.UAH / fx.rates.EUR).toFixed(2)} грн</div>
+        <div>1 PLN = ${(fx.rates.UAH / fx.rates.PLN).toFixed(2)} грн</div>
+        <div>1 GBP = ${(fx.rates.UAH / fx.rates.GBP).toFixed(2)} грн</div>
       `;
     }else{throw new Error("FX API failed");}
   }catch(err){console.log(err); document.getElementById("fx").innerHTML="FX data unavailable";}
@@ -116,6 +133,7 @@ async function loadCrypto(){
     const fngData = await fngRes.json();
     const fngIndex = fngData.data[0].value;
     const fngText = fngData.data[0].value_classification;
+
     const now = new Date(); 
     const hours = now.getUTCHours();
     let session = "Unknown";
@@ -130,6 +148,21 @@ async function loadCrypto(){
 
     const alertsContainer = document.getElementById("alerts");
     alertsContainer.innerHTML = "";
+
+    let stateText = "Норма";
+    let stateColor = "#00ff00";
+
+    if(fngText.includes("Extreme") || parseFloat(cryptoVol) > 5) {
+      stateText = "Страх";
+      stateColor = "#ff0000";
+    } else if(fngText.includes("Greed")) {
+      stateText = "Жадібність";
+      stateColor = "#00ffff";
+    }
+
+    document.getElementById("systemButton").innerText = stateText;
+    document.getElementById("systemButton").style.background = `linear-gradient(90deg, ${stateColor}, #000000)`;
+
     data.forEach(c=>{
       const change = parseFloat(c.priceChangePercent);
       if(Math.abs(change)>5){
@@ -141,20 +174,6 @@ async function loadCrypto(){
         setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
       }
     });
-    if(parseFloat(cryptoVol)>5){
-      const div = document.createElement("div");
-      div.classList.add("alert","up");
-      div.innerText = `High Crypto Volatility: ${cryptoVol}`;
-      alertsContainer.appendChild(div);
-      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
-    }
-    if(fngText.includes("Extreme")){
-      const div = document.createElement("div");
-      div.classList.add("alert","down");
-      div.innerText = `Fear & Greed Extreme: ${fngText}`;
-      alertsContainer.appendChild(div);
-      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
-    }
 
   }catch(err){
     console.log(err);
@@ -167,6 +186,8 @@ async function loadCrypto(){
       <div>- Поточна сесія: unavailable</div>
     `;
     document.getElementById("alerts").innerText="Alerts unavailable";
+    document.getElementById("systemButton").innerText="Норма";
+    document.getElementById("systemButton").style.background="linear-gradient(90deg,#00ff00,#000000)";
   }
 }
 loadCrypto();
