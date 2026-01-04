@@ -10,29 +10,16 @@
 html, body {width:100%; height:100%; background:#000; font-family:"Times New Roman", serif; color:#9fe7ff; overflow-x:hidden;}
 canvas {position:fixed; inset:0; z-index:0;}
 .wrapper {position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; padding:20px; gap:10px; text-align:center; line-height:1.2; font-size:12px;}
-
-/* GIF & Logo */
 #header-gif {max-width:180px; border-radius:6px; background:linear-gradient(180deg, #000, #4b0082); padding:6px;}
 #header-caption {font-size:10px; opacity:0.5; margin-bottom:10px;}
-
-/* Sections */
 .section {width:90%; max-width:720px; margin:4px 0; display:flex; flex-wrap:wrap; justify-content:space-between;}
 .section div {margin:2px 6px; font-size:12px; line-height:1.2;}
-
-/* Ticker */
 #ticker {width:100%; overflow:hidden; background:#1a001a; border-top:1px solid #111; border-bottom:1px solid #111; padding:4px 0; position:relative;}
 #ticker span {display:inline-block; white-space:nowrap; padding-left:100%; animation: ticker 60s linear infinite; font-size:12px;}
 @keyframes ticker {from{transform:translateX(0);} to{transform:translateX(-100%);}}
-
-/* Analytics */
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px;}
-
-/* Charts */
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
-
-/* Footer */
 #footer {font-size:10px; opacity:0.4; margin:12px 0;}
-
 @media(max-width:600px){.chart{height:240px;}}
 </style>
 </head>
@@ -41,21 +28,14 @@ canvas {position:fixed; inset:0; z-index:0;}
 <canvas id="stars"></canvas>
 
 <div class="wrapper">
-
-  <!-- Header GIF -->
   <img src="1.gif" alt="header" id="header-gif">
   <div id="header-caption">lavanda audit monito lab live</div>
 
-  <!-- Ticker -->
   <div id="ticker"><span id="tickerText">LOADING CRYPTO DATA...</span></div>
 
-  <!-- FX -->
   <div class="section" id="fx"></div>
-
-  <!-- Metals -->
   <div class="section" id="metals"></div>
 
-  <!-- Analytics -->
   <div id="analytics">
     <div id="volume24h">- Об’єм торгів за 24h: loading...</div>
     <div id="percentChange">- % зміна: loading...</div>
@@ -63,7 +43,6 @@ canvas {position:fixed; inset:0; z-index:0;}
     <div id="fearGreed">- Індекс страху та жадібності: loading...</div>
   </div>
 
-  <!-- TradingView Charts -->
   <div id="chartBTC" class="chart"></div>
   <div id="chartETH" class="chart"></div>
   <div id="chartSOL" class="chart"></div>
@@ -71,7 +50,6 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div id="chartLTC" class="chart"></div>
   <div id="chartDASH" class="chart"></div>
 
-  <!-- Footer -->
   <div id="footer">© IBONARIUM • last update: <span id="lastUpdate"></span></div>
 </div>
 
@@ -89,27 +67,24 @@ function loadFX(){document.getElementById("fx").innerHTML='<div>UAH / USD 36.85<
 function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
 loadFX(); loadMetals();
 
-// ================= CRYPTO TICKER & ANALYTICS =================
+// ================= CRYPTO TICKER (Binance) =================
 async function loadCrypto(){
   try{
-    const coins=["bitcoin","ethereum","solana","ripple","litecoin","dash","cardano","binancecoin","polkadot","dogecoin","avalanche-2","matic-network","chainlink","tron","stellar","uniswap","cosmos","vechain","filecoin","internet-computer"];
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins.join(",")}&order=market_cap_desc&per_page=20&page=1&sparkline=false`;
-    const res = await fetch(url);
-    if(!res.ok) throw new Error("CoinGecko API error");
-    const data = await res.json();
+    const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","LTCUSDT","DASHUSDT","ADAUSDT","BNBUSDT","DOTUSDT","DOGEUSDT","AVAXUSDT","MATICUSDT","LINKUSDT","TRXUSDT","XLMUSDT","UNIUSDT","ATOMUSDT","VETUSDT","FILUSDT","ICPUSDT"];
+    const promises = symbols.map(sym => fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`).then(res=>res.json()));
+    const data = await Promise.all(promises);
 
-    // Ticker
-    const tickerStr = data.map(c=>`${c.symbol.toUpperCase()} ${c.current_price.toLocaleString()} USD (${c.price_change_percentage_24h?.toFixed(2)}%)`).join(" • ");
-    document.getElementById("tickerText").innerText=tickerStr;
+    const tickerStr = data.map(c=>`${c.symbol.replace("USDT","")} ${parseFloat(c.lastPrice).toLocaleString()} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%)`).join(" • ");
+    document.getElementById("tickerText").innerText = tickerStr;
 
     // Analytics
-    document.getElementById("volume24h").innerText="- Об’єм торгів за 24h: " + data.map(c=>`${c.symbol.toUpperCase()}:${c.total_volume.toLocaleString()}`).join(" | ");
-    document.getElementById("percentChange").innerText="- % зміна за день: " + data.map(c=>`${c.symbol.toUpperCase()}:${c.price_change_percentage_24h?.toFixed(2)}%`).join(" | ");
-    const prices = data.map(c=>c.current_price);
-    const vol = Math.max(...prices) - Math.min(...prices);
+    document.getElementById("volume24h").innerText="- Об’єм торгів за 24h: " + data.map(c=>`${c.symbol.replace("USDT","")}:${parseFloat(c.volume).toLocaleString()}`).join(" | ");
+    document.getElementById("percentChange").innerText="- % зміна за день: " + data.map(c=>`${c.symbol.replace("USDT","")}:${parseFloat(c.priceChangePercent).toFixed(2)}%`).join(" | ");
+    const prices = data.map(c=>parseFloat(c.lastPrice));
+    const vol = Math.max(...prices)-Math.min(...prices);
     document.getElementById("volatility").innerText="- Волатильність (Crypto / Metals / FX): " + vol.toFixed(2);
 
-    // Fear & Greed Index
+    // Fear & Greed
     const fgRes = await fetch("https://api.alternative.me/fng/?limit=1");
     const fgData = await fgRes.json();
     document.getElementById("fearGreed").innerText="- Індекс страху та жадібності: " + fgData.data[0].value + " (" + fgData.data[0].value_classification + ")";
@@ -118,13 +93,13 @@ async function loadCrypto(){
     console.log(err);
     document.getElementById("tickerText").innerText="Crypto data unavailable";
     document.getElementById("volume24h").innerText="- Об’єм торгів за 24h: unavailable";
-    document.getElementById("percentChange").innerText="- % зміна за день: unavailable";
+    document.getElementById("percentChange").innerText="- % зміна: unavailable";
     document.getElementById("volatility").innerText="- Волатильність: unavailable";
     document.getElementById("fearGreed").innerText="- Індекс страху та жадібності: unavailable";
   }
 }
 loadCrypto();
-setInterval(loadCrypto,60000);
+setInterval(loadCrypto,30000);
 
 // ================= LAST UPDATE =================
 function updateTime(){document.getElementById("lastUpdate").innerText=new Date().toLocaleTimeString();}
