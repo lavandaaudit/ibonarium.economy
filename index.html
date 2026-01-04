@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IBONARIUM · ECONOMIC SIGNAL</title>
+<title>ECONOMIC SIGNAL</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400&display=swap');
 
 body {
   margin: 0;
-  font-family: 'JetBrains Mono', monospace;
   background: black;
   color: #cfd8dc;
+  font-family: 'JetBrains Mono', monospace;
   overflow: hidden;
 }
 
@@ -22,44 +22,36 @@ canvas {
   z-index: -1;
 }
 
-.wrapper {
+/* ===== ЦЕНТР ===== */
+.center {
+  position: absolute;
+  inset: 0;
   display: flex;
-  height: 100vh;
+  align-items: center;
+  justify-content: center;
 }
 
-.sidebar {
-  width: 340px;
-  padding: 20px;
-  border-right: 1px solid #111;
-  overflow-y: auto;
-}
-
-.block {
-  margin-bottom: 26px;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 26px 40px;
+  text-align: center;
 }
 
 .block h3 {
-  font-size: 12px;
-  color: #90caf9;
-  margin-bottom: 8px;
+  font-size: 11px;
   letter-spacing: 1px;
+  color: #90caf9;
+  margin-bottom: 6px;
 }
 
 .item {
-  display: flex;
-  justify-content: space-between;
   font-size: 13px;
-  margin: 4px 0;
+  margin: 3px 0;
+  white-space: nowrap;
+  opacity: .9;
 }
-
-.main {
-  flex: 1;
-  padding: 24px;
-  opacity: 0.7;
-}
-
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: #222; }
+.dim { opacity: .4; }
 </style>
 </head>
 
@@ -67,93 +59,96 @@ canvas {
 
 <canvas id="stars"></canvas>
 
-<div class="wrapper">
-
-  <div class="sidebar">
+<div class="center">
+  <div class="grid">
 
     <div class="block">
-      <h3>ВАЛЮТИ → UAH</h3>
-      <div id="fx">loading…</div>
+      <h3>ВАЛЮТИ · UAH</h3>
+      <div id="fx" class="dim">loading…</div>
     </div>
 
     <div class="block">
-      <h3>МЕТАЛИ → UAH</h3>
-      <div id="metals">loading…</div>
+      <h3>МЕТАЛИ · UAH</h3>
+      <div id="metals" class="dim">loading…</div>
     </div>
 
     <div class="block">
-      <h3>КРИПТОВАЛЮТИ (USD)</h3>
-      <div id="crypto">loading…</div>
+      <h3>КРИПТО · USD</h3>
+      <div id="crypto" class="dim">connecting…</div>
     </div>
 
   </div>
-
-  <div class="main">
-    ECONOMIC SIGNAL  
-    <br>OSINT · OFF-GRID · LIVE DATA
-  </div>
-
 </div>
 
 <script>
-/* ===== STAR FIELD ===== */
+/* ===== STARFIELD ===== */
 const c = document.getElementById('stars');
 const x = c.getContext('2d');
 function resize(){c.width=innerWidth;c.height=innerHeight;}
 resize(); onresize=resize;
-const stars=[...Array(140)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,z:Math.random()*2}));
+const stars=[...Array(150)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,z:Math.random()*2}));
 (function draw(){
   x.clearRect(0,0,c.width,c.height);
   stars.forEach(s=>{
     s.y+=s.z;
     if(s.y>c.height) s.y=0;
-    x.fillStyle='white';
     x.globalAlpha=s.z/2;
+    x.fillStyle='white';
     x.fillRect(s.x,s.y,1,1);
   });
   requestAnimationFrame(draw);
 })();
 
-/* ===== NBU DATA ===== */
+/* ===== NBU ===== */
 async function loadNBU(){
   const r = await fetch('https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json');
   const d = await r.json();
 
-  const fxMap = ['USD','EUR','GBP','PLN'];
   fx.innerHTML='';
   metals.innerHTML='';
 
   d.forEach(i=>{
-    if(fxMap.includes(i.cc)){
-      fx.innerHTML += `<div class="item"><span>${i.cc}</span><span>${i.rate.toFixed(2)}</span></div>`;
-    }
-    if(['XAU','XAG','XPT','XPD'].includes(i.cc)){
-      metals.innerHTML += `<div class="item"><span>${i.cc}</span><span>${i.rate.toFixed(2)}</span></div>`;
-    }
+    if(['USD','EUR','GBP','PLN'].includes(i.cc))
+      fx.innerHTML += `<div class="item">${i.cc} ${i.rate.toFixed(2)}</div>`;
+
+    if(['XAU','XAG','XPT','XPD'].includes(i.cc))
+      metals.innerHTML += `<div class="item">${i.cc} ${i.rate.toFixed(2)}</div>`;
   });
+
+  fx.classList.remove('dim');
+  metals.classList.remove('dim');
 }
 
-/* ===== CRYPTO ===== */
+/* ===== CRYPTO (НЕ БЛОКУЄ) ===== */
 async function loadCrypto(){
-  const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,litecoin,ripple,dash&vs_currencies=usd');
-  const d = await r.json();
-  crypto.innerHTML = `
-    <div class="item"><span>BTC</span><span>${d.bitcoin.usd}</span></div>
-    <div class="item"><span>ETH</span><span>${d.ethereum.usd}</span></div>
-    <div class="item"><span>SOL</span><span>${d.solana.usd}</span></div>
-    <div class="item"><span>LTC</span><span>${d.litecoin.usd}</span></div>
-    <div class="item"><span>XRP</span><span>${d.ripple.usd}</span></div>
-    <div class="item"><span>DASH</span><span>${d.dash.usd}</span></div>
-  `;
+  crypto.innerHTML = '<div class="item dim">fetching market…</div>';
+
+  try {
+    const r = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,litecoin,ripple,dash&vs_currencies=usd'
+    );
+    const d = await r.json();
+
+    crypto.innerHTML = `
+      <div class="item">BTC ${d.bitcoin.usd}</div>
+      <div class="item">ETH ${d.ethereum.usd}</div>
+      <div class="item">SOL ${d.solana.usd}</div>
+      <div class="item">LTC ${d.litecoin.usd}</div>
+      <div class="item">XRP ${d.ripple.usd}</div>
+      <div class="item">DASH ${d.dash.usd}</div>
+    `;
+    crypto.classList.remove('dim');
+
+  } catch {
+    crypto.innerHTML = '<div class="item dim">no signal</div>';
+  }
 }
 
-async function refresh(){
-  loadNBU();
-  loadCrypto();
-}
+/* ===== INIT ===== */
+loadNBU();
+loadCrypto();
 
-refresh();
-setInterval(refresh, 60000);
+setInterval(loadCrypto, 60000);
 </script>
 
 </body>
