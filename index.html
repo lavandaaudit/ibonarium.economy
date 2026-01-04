@@ -8,15 +8,14 @@
 * {margin:0; padding:0; box-sizing:border-box;}
 html, body {width:100%; height:100%; background:#000; font-family:"Times New Roman", serif; color:#9fe7ff; overflow-x:hidden;}
 canvas {position:fixed; inset:0; z-index:0;}
-.wrapper {position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; padding:20px; gap:6px; text-align:center; font-size:12px; line-height:1.2;}
-#header-gif {max-width:200px; border-radius:6px; background:linear-gradient(180deg, #000, #4b0082); padding:6px;}
-#header-caption {font-size:10px; opacity:0.5; margin-bottom:10px;}
+.wrapper {position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; padding:20px; gap:6px; text-align:center; font-size:13px; line-height:1.3;}
+#header-title {font-size:20px; font-weight:bold; margin-bottom:10px;}
 .section {width:90%; max-width:720px; margin:4px 0; display:flex; flex-wrap:wrap; justify-content:space-between;}
 .section div {margin:2px 6px; font-size:12px; line-height:1.2;}
 #ticker {width:100%; overflow:hidden; background:#1a001a; border-top:1px solid #111; border-bottom:1px solid #111; padding:4px 0; position:relative;}
-#ticker span {display:inline-block; white-space:nowrap; padding-left:100%; animation: ticker 60s linear infinite; font-size:12px;}
+#ticker span {display:inline-block; white-space:nowrap; padding-left:100%; animation: ticker 60s linear infinite; font-size:13px;}
 @keyframes ticker {from{transform:translateX(0);} to{transform:translateX(-100%);}}
-#analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px;}
+#analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px;}
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
 #footer {font-size:10px; opacity:0.4; margin:12px 0;}
 @media(max-width:600px){.chart{height:240px;}}
@@ -26,8 +25,7 @@ canvas {position:fixed; inset:0; z-index:0;}
 <canvas id="stars"></canvas>
 
 <div class="wrapper">
-  <img src="1.gif" alt="header" id="header-gif">
-  <div id="header-caption">lavanda audit monito lab live</div>
+  <div id="header-title">IBONARIUM • ECONOMY SIGNAL</div>
 
   <div id="ticker"><span id="tickerText">LOADING CRYPTO DATA...</span></div>
 
@@ -63,7 +61,7 @@ loadFX(); loadMetals();
 // ================= CRYPTO TICKER & ANALYTICS (Binance) =================
 async function loadCrypto(){
   try{
-    const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","LTCUSDT","DASHUSDT","ADAUSDT","BNBUSDT","DOTUSDT","DOGEUSDT","AVAXUSDT","MATICUSDT","LINKUSDT","TRXUSDT","XLMUSDT","UNIUSDT","ATOMUSDT","VETUSDT","FILUSDT","ICPUSDT"];
+    const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","LTCUSDT","DASHUSDT"];
     const promises = symbols.map(sym => fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`).then(res=>res.json()));
     const data = await Promise.all(promises);
 
@@ -75,12 +73,17 @@ async function loadCrypto(){
     const analytics = data.map(c=>{
       return `<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`;
     }).join("");
-    document.getElementById("analytics").innerHTML=analytics;
+    document.getElementById("analytics").innerHTML = analytics;
 
   }catch(err){
     console.log(err);
     document.getElementById("tickerText").innerText="Crypto data unavailable";
-    document.getElementById("analytics").innerHTML="<div>Data unavailable</div>";
+    document.getElementById("analytics").innerHTML = `
+      <div>- Об’єм торгів за 24h: unavailable</div>
+      <div>- % зміна за день: unavailable</div>
+      <div>- Волатильність: unavailable</div>
+      <div>- Індекс страху та жадібності: unavailable</div>
+    `;
   }
 }
 loadCrypto();
