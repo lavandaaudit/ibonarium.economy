@@ -58,7 +58,7 @@ function loadFX(){document.getElementById("fx").innerHTML='<div>UAH / USD 36.85<
 function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
 loadFX(); loadMetals();
 
-// ================= CRYPTO TICKER & ANALYTICS (Binance) =================
+// ================= CRYPTO TICKER & ANALYTICS =================
 async function loadCrypto(){
   try{
     const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","LTCUSDT","DASHUSDT"];
@@ -73,7 +73,30 @@ async function loadCrypto(){
     const analytics = data.map(c=>{
       return `<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`;
     }).join("");
-    document.getElementById("analytics").innerHTML = analytics;
+
+    // ================= Volatility & Fear/Greed & Session =================
+    // Volatility простий приклад: std deviation / price (спрощено)
+    const cryptoVol = Math.max(...data.map(c=>parseFloat(c.priceChangePercent))).toFixed(2) + "%";
+    const metalsVol = "0.5%"; // спрощено, можна замінити реальними даними
+    const fxVol = "0.3%"; // спрощено
+    // Fear & Greed API
+    const fngRes = await fetch("https://api.alternative.me/fng/?limit=1");
+    const fngData = await fngRes.json();
+    const fngIndex = fngData.data[0].value;
+    const fngText = fngData.data[0].value_classification;
+
+    // Market Session (Asia, Europe, US)
+    const now = new Date(); 
+    const hours = now.getUTCHours();
+    let session = "Unknown";
+    if(hours>=0 && hours<9) session="Asia Session";
+    else if(hours>=7 && hours<16) session="Europe Session";
+    else if(hours>=13 && hours<22) session="US Session";
+
+    document.getElementById("analytics").innerHTML = analytics + 
+      `<div>- Волатильність: Crypto ${cryptoVol} / Metals ${metalsVol} / FX ${fxVol}</div>` +
+      `<div>- Індекс страху та жадібності: ${fngIndex} (${fngText})</div>` +
+      `<div>- Поточна сесія: ${session}</div>`;
 
   }catch(err){
     console.log(err);
@@ -83,6 +106,7 @@ async function loadCrypto(){
       <div>- % зміна за день: unavailable</div>
       <div>- Волатильність: unavailable</div>
       <div>- Індекс страху та жадібності: unavailable</div>
+      <div>- Поточна сесія: unavailable</div>
     `;
   }
 }
