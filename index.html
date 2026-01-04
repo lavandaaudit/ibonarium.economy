@@ -3,148 +3,183 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ECONOMIC SIGNAL</title>
+<title>IBONARIUM • economy.signal</title>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400&display=swap');
-
-body {
-  margin: 0;
-  background: black;
-  color: #cfd8dc;
-  font-family: 'JetBrains Mono', monospace;
-  overflow: hidden;
+html,body{
+  margin:0;
+  padding:0;
+  background:radial-gradient(circle at center,#111 0%,#000 70%);
+  color:#d0d0d0;
+  font-family:"Courier New",monospace;
 }
 
-canvas {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-}
-
-/* ===== ЦЕНТР ===== */
-.center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stack {
-  text-align: center;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.sep {
-  opacity: .3;
-  margin: 8px 0;
+#wrap{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
 }
 
 /* ===== TICKER ===== */
-.ticker {
-  position: fixed;
-  bottom: 18px;
-  width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  font-size: 12px;
-  opacity: .85;
+#ticker{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  overflow:hidden;
+  background:#000;
+  border-top:1px solid #111;
 }
 
-.ticker span {
-  display: inline-block;
-  padding-left: 100%;
-  animation: scroll 30s linear infinite;
+#ticker span{
+  display:inline-block;
+  white-space:nowrap;
+  padding-left:100%;
+  animation:ticker 40s linear infinite;
+  font-size:13px;
 }
 
-@keyframes scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
+@keyframes ticker{
+  from{transform:translateX(0);}
+  to{transform:translateX(-100%);}
+}
+
+/* ===== CONTENT ===== */
+.section{
+  text-align:center;
+  margin:18px 0;
+  opacity:0;
+  animation:fadeIn 1.4s forwards;
+}
+
+.section:nth-child(2){animation-delay:.4s}
+.section:nth-child(3){animation-delay:.8s}
+.section:nth-child(4){animation-delay:1.2s}
+
+@keyframes fadeIn{
+  to{opacity:1}
+}
+
+h2{
+  font-size:13px;
+  color:#777;
+  margin-bottom:6px;
+  font-weight:normal;
+}
+
+.data div{
+  font-size:15px;
+  line-height:1.7;
+}
+
+.up{color:#6f6}
+.down{color:#f66}
+
+/* ===== CHART ===== */
+#chart{
+  width:92vw;
+  max-width:720px;
+  height:360px;
+  margin:30px 0;
+  border:1px solid #111;
 }
 </style>
 </head>
 
 <body>
+<div id="wrap">
 
-<canvas id="stars"></canvas>
-
-<div class="center">
-  <div class="stack">
-    <div id="fx">loading…</div>
-    <div class="sep">────────────</div>
-    <div id="metals">loading…</div>
+  <div class="section">
+    <h2>UAH / FX</h2>
+    <div id="fx" class="data">loading...</div>
   </div>
+
+  <div class="section">
+    <h2>METALS / USD (oz)</h2>
+    <div id="metals" class="data">loading...</div>
+  </div>
+
+  <div class="section">
+    <h2>CRYPTO / USD (24h)</h2>
+    <div id="crypto" class="data">loading...</div>
+  </div>
+
+  <div id="chart"></div>
 </div>
 
-<div class="ticker">
-  <span id="cryptoTicker">CRYPTO SIGNAL LOADING…</span>
-</div>
+<div id="ticker"><span id="tickerText">loading...</span></div>
 
 <script>
-/* ===== STARFIELD ===== */
-const c = document.getElementById('stars');
-const x = c.getContext('2d');
-function resize(){c.width=innerWidth;c.height=innerHeight;}
-resize(); onresize=resize;
-const stars=[...Array(140)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,z:Math.random()*2}));
-(function draw(){
-  x.clearRect(0,0,c.width,c.height);
-  stars.forEach(s=>{
-    s.y+=s.z;
-    if(s.y>c.height) s.y=0;
-    x.globalAlpha=s.z/2;
-    x.fillStyle='white';
-    x.fillRect(s.x,s.y,1,1);
-  });
-  requestAnimationFrame(draw);
-})();
-
-/* ===== NBU ===== */
-async function loadNBU(){
-  const r = await fetch('https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json');
-  const d = await r.json();
-
-  fx.innerHTML = '';
-  metals.innerHTML = '';
-
-  d.forEach(i=>{
-    if(['USD','EUR','GBP','PLN'].includes(i.cc))
-      fx.innerHTML += `<div>${i.cc} ${i.rate.toFixed(2)} UAH</div>`;
-
-    if(['XAU','XAG','XPT','XPD'].includes(i.cc))
-      metals.innerHTML += `<div>${i.cc} ${i.rate.toFixed(2)} USD</div>`;
-  });
+/* ================= FX NBU ================= */
+async function loadFX(){
+  const r=await fetch("https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json");
+  const d=await r.json();
+  const f=d.filter(x=>["USD","EUR","PLN"].includes(x.cc));
+  fx.innerHTML=f.map(x=>`<div>${x.cc} ${x.rate.toFixed(2)} UAH</div>`).join("");
 }
 
-/* ===== CRYPTO TICKER (BINANCE) ===== */
-const symbols = [
-  'BTCUSDT','ETHUSDT','SOLUSDT','LTCUSDT','XRPUSDT','DASHUSDT'
-];
+/* ================= METALS ================= */
+const METALS_KEY="PASTE_YOUR_METALS_API_KEY";
 
-async function loadCryptoTicker(){
-  try {
-    const r = await fetch('https://api.binance.com/api/v3/ticker/price');
-    const d = await r.json();
-
-    const filtered = d.filter(i => symbols.includes(i.symbol));
-
-    const text = filtered
-      .map(i => `${i.symbol.replace('USDT','')} ${Number(i.price).toFixed(2)} USD`)
-      .join('   •   ');
-
-    cryptoTicker.textContent = text + '   •   ';
-  } catch {
-    cryptoTicker.textContent = 'CRYPTO SIGNAL LOST';
+async function loadMetals(){
+  try{
+    const r=await fetch(`https://metals-api.com/api/latest?access_key=${METALS_KEY}&base=USD&symbols=XAU,XAG,XPT,XPD`);
+    const d=await r.json();
+    metals.innerHTML=`
+      <div>XAU ${d.rates.XAU.toFixed(2)} USD</div>
+      <div>XAG ${d.rates.XAG.toFixed(2)} USD</div>
+      <div>XPT ${d.rates.XPT.toFixed(2)} USD</div>
+      <div>XPD ${d.rates.XPD.toFixed(2)} USD</div>`;
+  }catch{
+    metals.innerHTML="<div>NO DATA</div>";
   }
 }
 
-/* ===== INIT ===== */
-loadNBU();
-loadCryptoTicker();
+/* ================= CRYPTO ================= */
+async function loadCrypto(){
+  const r=await fetch(
+    "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana,litecoin,ripple,dash"
+  );
+  const d=await r.json();
 
-setInterval(loadCryptoTicker, 30000);
+  crypto.innerHTML=d.map(c=>{
+    const cls=c.price_change_percentage_24h>=0?"up":"down";
+    const sign=c.price_change_percentage_24h>=0?"+":"";
+    return `<div>${c.symbol.toUpperCase()} ${c.current_price} USD <span class="${cls}">${sign}${c.price_change_percentage_24h.toFixed(2)}%</span></div>`;
+  }).join("");
+
+  tickerText.innerText=d.map(c=>
+    `${c.symbol.toUpperCase()} ${c.current_price} USD (${c.price_change_percentage_24h.toFixed(2)}%)`
+  ).join(" • ");
+}
+
+/* ================= START ================= */
+loadFX();
+loadMetals();
+loadCrypto();
+
+setInterval(loadFX,60000);
+setInterval(loadMetals,300000);
+setInterval(loadCrypto,60000);
+</script>
+
+<!-- ================= TRADINGVIEW ================= -->
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script>
+new TradingView.widget({
+  container_id:"chart",
+  autosize:true,
+  symbol:"BTCUSD",
+  interval:"60",
+  timezone:"Europe/Kiev",
+  theme:"dark",
+  style:"1",
+  locale:"en",
+  hide_top_toolbar:true,
+  hide_side_toolbar:true,
+  allow_symbol_change:true
+});
 </script>
 
 </body>
