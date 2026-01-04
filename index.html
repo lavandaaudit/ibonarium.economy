@@ -45,7 +45,8 @@ canvas {position:fixed; inset:0; z-index:0;}
   display:flex;
   align-items:center;
   justify-content:center;
-  width:160px;
+  width:92vw;
+  max-width:720px;
   height:50px;
   margin:10px 0;
   border-radius:25px;
@@ -61,7 +62,18 @@ canvas {position:fixed; inset:0; z-index:0;}
   cursor:default;
   transition: all 1s ease;
   animation: pulseNeon 2s infinite alternate;
+  gap:10px;
 }
+#systemButton span {
+  font-weight:bold;
+  padding:4px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,0.2);
+  text-shadow:0 0 4px #fff;
+}
+.upState {background:linear-gradient(90deg,#0f0,#0a0);}
+.downState {background:linear-gradient(90deg,#f00,#a00);}
+.normalState {background:linear-gradient(90deg,#ff0,#aa0);}
 @keyframes pulseNeon {
   0% {box-shadow:0 0 6px #0ff inset, 0 0 20px #0ff; text-shadow:0 0 4px #0ff,0 0 10px #0ff;}
   50% {box-shadow:0 0 12px #0ff inset, 0 0 40px #0ff; text-shadow:0 0 8px #0ff,0 0 20px #0ff;}
@@ -85,7 +97,7 @@ canvas {position:fixed; inset:0; z-index:0;}
 
   <div id="alerts"></div>
 
-  <div id="systemButton">Норма</div>
+  <div id="systemButton"><span class="normalState">Норма</span></div>
 
   <div id="analytics"></div>
 
@@ -164,22 +176,16 @@ async function loadCrypto(){
     const alertsContainer = document.getElementById("alerts");
     alertsContainer.innerHTML = "";
 
-    let stateText = "Норма";
-    let stateColor = "#0ff"; // default neon cyan
-
-    if(fngText.includes("Extreme") || parseFloat(cryptoVol) > 5) {
-      stateText = "Страх";
-      stateColor = "#ff00ff"; // neon magenta for fear
-    } else if(fngText.includes("Greed")) {
-      stateText = "Жадібність";
-      stateColor = "#00ff00"; // neon green for greed
-    }
-
+    // ================= SYSTEM BUTTON STATE =================
     const btn = document.getElementById("systemButton");
-    btn.innerText = stateText;
-    btn.style.borderColor = stateColor;
-    btn.style.textShadow = `0 0 6px ${stateColor}, 0 0 12px ${stateColor}`;
-    btn.style.boxShadow = `0 0 12px ${stateColor} inset, 0 0 20px ${stateColor}`;
+    const span = btn.querySelector("span");
+    if(fngText.includes("Extreme") || parseFloat(cryptoVol) > 5){
+      span.innerText="Страх"; span.className="downState";
+    } else if(fngText.includes("Greed")){
+      span.innerText="Жадібність"; span.className="upState";
+    } else {
+      span.innerText="Норма"; span.className="normalState";
+    }
 
     data.forEach(c=>{
       const change = parseFloat(c.priceChangePercent);
@@ -206,10 +212,8 @@ async function loadCrypto(){
     document.getElementById("alerts").innerText="Alerts unavailable";
 
     const btn = document.getElementById("systemButton");
-    btn.innerText="Норма";
-    btn.style.borderColor="#0ff";
-    btn.style.textShadow="0 0 6px #0ff, 0 0 12px #0ff";
-    btn.style.boxShadow="0 0 12px #0ff inset, 0 0 20px #0ff";
+    const span = btn.querySelector("span");
+    span.innerText="Норма"; span.className="normalState";
   }
 }
 loadCrypto();
