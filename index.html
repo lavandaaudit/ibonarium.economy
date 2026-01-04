@@ -15,10 +15,27 @@ canvas {position:fixed; inset:0; z-index:0;}
 #ticker {width:100%; overflow:hidden; background:#1a001a; border-top:1px solid #111; border-bottom:1px solid #111; padding:4px 0; position:relative;}
 #ticker span {display:inline-block; white-space:nowrap; padding-left:100%; animation: ticker 60s linear infinite; font-size:13px;}
 @keyframes ticker {from{transform:translateX(0);} to{transform:translateX(-100%);}}
-#alerts {width:90%; max-width:720px; padding:6px; margin:10px 0; text-align:center; font-size:12px; line-height:1.3; position:relative;}
-.alert {display:inline-block; padding:6px 12px; margin:2px; border-radius:8px; color:#fff; font-weight:bold; opacity:0.9; transition:opacity 1s, transform 0.3s; font-family:"Courier New", monospace;}
-.alert.up {background:linear-gradient(90deg,#00ff00,#00aa00); transform:rotate(-2deg);}
-.alert.down {background:linear-gradient(90deg,#ff0000,#aa0000); transform:rotate(2deg);}
+#alerts {width:90%; max-width:720px; padding:8px; margin:12px 0; text-align:center; font-size:13px; line-height:1.3; position:relative;}
+.alert {
+  display:inline-block;
+  padding:10px 16px;
+  margin:4px;
+  border-radius:12px;
+  color:#fff;
+  font-weight:bold;
+  opacity:0.9;
+  font-family:"Courier New", monospace;
+  font-size:14px;
+  transition:opacity 1s, transform 0.3s;
+  animation: neonPulse 1.2s infinite alternate;
+}
+.alert.up {background:linear-gradient(90deg,#00ff00,#00aa00);}
+.alert.down {background:linear-gradient(90deg,#ff0000,#aa0000);}
+@keyframes neonPulse {
+  0% {text-shadow:0 0 4px #fff,0 0 10px #0ff,0 0 20px #0ff,0 0 40px #0ff;}
+  50% {text-shadow:0 0 8px #fff,0 0 20px #0ff,0 0 40px #0ff,0 0 60px #0ff;}
+  100% {text-shadow:0 0 4px #fff,0 0 10px #0ff,0 0 20px #0ff,0 0 40px #0ff;}
+}
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px;}
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
 #footer {font-size:10px; opacity:0.4; margin:12px 0;}
@@ -71,19 +88,12 @@ async function loadFX(){
         <div>1 PLN = ${(fx.rates.UAH / fx.rates.PLN).toFixed(2)} UAH</div>
         <div>1 GBP = ${(fx.rates.UAH / fx.rates.GBP).toFixed(2)} UAH</div>
       `;
-    }else{
-      throw new Error("FX API failed");
-    }
-  }catch(err){
-    console.log(err);
-    document.getElementById("fx").innerHTML="FX data unavailable";
-  }
+    }else{throw new Error("FX API failed");}
+  }catch(err){console.log(err); document.getElementById("fx").innerHTML="FX data unavailable";}
 }
-
 function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
-
 loadFX(); loadMetals();
-setInterval(loadFX,300000); // обновлення курсу кожні 5 хв
+setInterval(loadFX,300000);
 
 // ================= CRYPTO TICKER & ANALYTICS & ALERTS =================
 async function loadCrypto(){
@@ -92,11 +102,9 @@ async function loadCrypto(){
     const promises = symbols.map(sym => fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`).then(res=>res.json()));
     const data = await Promise.all(promises);
 
-    // Ticker
     const tickerStr = data.map(c=>`${c.symbol.replace("USDT","")} ${parseFloat(c.lastPrice).toLocaleString()} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%)`).join(" • ");
     document.getElementById("tickerText").innerText = tickerStr;
 
-    // Analytics Panel
     const analytics = data.map(c=>{
       return `<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`;
     }).join("");
@@ -120,7 +128,6 @@ async function loadCrypto(){
       `<div>- Індекс страху та жадібності: ${fngIndex} (${fngText})</div>` +
       `<div>- Поточна сесія: ${session}</div>`;
 
-    // ================= Alerts =================
     const alertsContainer = document.getElementById("alerts");
     alertsContainer.innerHTML = "";
     data.forEach(c=>{
@@ -129,7 +136,7 @@ async function loadCrypto(){
         const div = document.createElement("div");
         div.classList.add("alert");
         div.classList.add(change>0 ? "up" : "down");
-        div.innerText = `${c.symbol.replace("USDT","")} price ${change>0 ? '↑' : '↓'} ${change.toFixed(2)}%`;
+        div.innerText = `${c.symbol.replace("USDT","")} ${change>0 ? '↑' : '↓'} ${change.toFixed(2)}%`;
         alertsContainer.appendChild(div);
         setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
       }
