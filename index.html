@@ -33,7 +33,7 @@ canvas {position:fixed; inset:0; z-index:0;}
 
   <div id="ticker"><span id="tickerText">LOADING CRYPTO DATA...</span></div>
 
-  <div class="section" id="fx"></div>
+  <div class="section" id="fx">Loading FX rates...</div>
   <div class="section" id="metals"></div>
 
   <div id="alerts"></div>
@@ -60,9 +60,24 @@ function draw(){ctx.fillStyle="#000"; ctx.fillRect(0,0,W,H); ctx.fillStyle="#9fe
 draw();
 
 // ================= FX & Metals =================
-function loadFX(){document.getElementById("fx").innerHTML='<div>UAH / USD 36.85</div><div>UAH / EUR 40.20</div><div>UAH / PLN 9.10</div><div>UAH / GBP 9.10</div>';}
+async function loadFX(){
+  try{
+    const res = await fetch('https://api.exchangerate.host/latest?base=UAH&symbols=USD,EUR,PLN,GBP');
+    const fx = await res.json();
+    document.getElementById("fx").innerHTML = `
+      <div>UAH / USD ${fx.rates.USD.toFixed(2)}</div>
+      <div>UAH / EUR ${fx.rates.EUR.toFixed(2)}</div>
+      <div>UAH / PLN ${fx.rates.PLN.toFixed(2)}</div>
+      <div>UAH / GBP ${fx.rates.GBP.toFixed(2)}</div>
+    `;
+  }catch(err){
+    console.log(err);
+    document.getElementById("fx").innerHTML="FX data unavailable";
+  }
+}
 function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
 loadFX(); loadMetals();
+setInterval(loadFX,300000); // обновлюємо раз на 5 хв
 
 // ================= CRYPTO TICKER & ANALYTICS & ALERTS =================
 async function loadCrypto(){
@@ -110,7 +125,7 @@ async function loadCrypto(){
         div.classList.add(change>0 ? "up" : "down");
         div.innerText = `${c.symbol.replace("USDT","")} price ${change>0 ? '↑' : '↓'} ${change.toFixed(2)}%`;
         alertsContainer.appendChild(div);
-        setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},5000);
+        setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
       }
     });
     if(parseFloat(cryptoVol)>5){
@@ -118,14 +133,14 @@ async function loadCrypto(){
       div.classList.add("alert","up");
       div.innerText = `High Crypto Volatility: ${cryptoVol}`;
       alertsContainer.appendChild(div);
-      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},5000);
+      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
     }
     if(fngText.includes("Extreme")){
       const div = document.createElement("div");
       div.classList.add("alert","down");
       div.innerText = `Fear & Greed Extreme: ${fngText}`;
       alertsContainer.appendChild(div);
-      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},5000);
+      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
     }
 
   }catch(err){
