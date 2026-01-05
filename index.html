@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ibonarium•cripto.signal.live</title>
 
+<!-- Підключаємо шрифти Cinzel та Space Grotesk -->
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
@@ -146,7 +147,7 @@ function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300
 loadFX(); loadMetals();
 setInterval(loadFX,300000);
 
-// ===== CRYPTO & ALERTS =====
+// ===== CRYPTO & ALERTS & ANALYTICS =====
 async function loadCrypto(){
   try{
     const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","LTCUSDT","DASHUSDT"];
@@ -160,7 +161,26 @@ async function loadCrypto(){
       return `<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`;
     }).join("");
 
-    document.getElementById("analytics").innerHTML = analytics;
+    // Додаткові дані перед графіками
+    const cryptoVol = Math.max(...data.map(c=>Math.abs(parseFloat(c.priceChangePercent)))).toFixed(2) + "%";
+    const metalsVol = "0.5%"; 
+    const fxVol = "0.3%";
+    const fngRes = await fetch("https://api.alternative.me/fng/?limit=1");
+    const fngData = await fngRes.json();
+    const fngIndex = fngData.data[0].value;
+    const fngText = fngData.data[0].value_classification;
+
+    const now = new Date(); 
+    const hours = now.getUTCHours();
+    let session = "Unknown";
+    if(hours>=0 && hours<9) session="Asia Session";
+    else if(hours>=7 && hours<16) session="Europe Session";
+    else if(hours>=13 && hours<22) session="US Session";
+
+    document.getElementById("analytics").innerHTML = analytics +
+      `<div>- Волатильність: Crypto ${cryptoVol} / Metals ${metalsVol} / FX ${fxVol}</div>` +
+      `<div>- Індекс страху та жадібності: ${fngIndex} (${fngText})</div>` +
+      `<div>- Поточна сесія: ${session}</div>`;
 
     // Alerts
     const alertsContainer = document.getElementById("alerts");
@@ -177,14 +197,24 @@ async function loadCrypto(){
       }
     });
 
-    // SYSTEM STATE без підложки для "Страх"
-    const btn = document.getElementById("systemButton");
-    const span = document.getElementById("systemState");
-    const fngRes = await fetch("https://api.alternative.me/fng/?limit=1");
-    const fngData = await fngRes.json();
-    const fngText = fngData.data[0].value_classification;
+    if(parseFloat(cryptoVol)>5){
+      const div = document.createElement("div");
+      div.classList.add("alert","up");
+      div.innerText = `High Crypto Volatility: ${cryptoVol}`;
+      alertsContainer.appendChild(div);
+      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
+    }
+    if(fngText.includes("Extreme")){
+      const div = document.createElement("div");
+      div.classList.add("alert","down");
+      div.innerText = `Fear & Greed Extreme: ${fngText}`;
+      alertsContainer.appendChild(div);
+      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
+    }
 
-    if(fngText.includes("Extreme") || Math.max(...data.map(c=>Math.abs(parseFloat(c.priceChangePercent))))>5){
+    // SYSTEM STATE без підложки
+    const span = document.getElementById("systemState");
+    if(fngText.includes("Extreme") || parseFloat(cryptoVol) > 5){
       span.innerText="Страх"; span.className="downState";
     } else if(fngText.includes("Greed")){
       span.innerText="Жадібність"; span.className="upState";
@@ -192,7 +222,14 @@ async function loadCrypto(){
       span.innerText="Норма"; span.className="normalState";
     }
 
-  }catch(err){console.log(err);}
+  }catch(err){
+    console.log(err);
+    document.getElementById("tickerText").innerText="Crypto data unavailable";
+    document.getElementById("analytics").innerHTML = `<div>- Дані недоступні</div>`;
+    document.getElementById("alerts").innerText="Alerts unavailable";
+    const span = document.getElementById("systemState");
+    span.innerText="LOADING..."; span.className="";
+  }
 }
 loadCrypto(); setInterval(loadCrypto,30000);
 
