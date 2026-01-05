@@ -5,33 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ibonarium•cripto.signal.live</title>
 
-<!-- Підключаємо шрифти Cinzel та Space Grotesk -->
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
 * {margin:0; padding:0; box-sizing:border-box;}
 html, body {
-  width:100%; height:100%; 
-  background:#000; 
-  font-family:'Space Grotesk', sans-serif; 
-  color:#9fe7ff; 
+  width:100%; height:100%;
+  background:#000;
+  font-family:'Space Grotesk', sans-serif;
+  color:#9fe7ff;
   overflow-x:hidden;
 }
 canvas {position:fixed; inset:0; z-index:0;}
 .wrapper {
-  position:relative; z-index:2; 
-  display:flex; flex-direction:column; 
-  align-items:center; 
-  padding:20px; gap:6px; 
-  text-align:center; 
+  position:relative; z-index:2;
+  display:flex; flex-direction:column;
+  align-items:center;
+  padding:20px; gap:6px;
+  text-align:center;
   font-size:13px; line-height:1.3;
 }
 
 /* ===== HEADER ===== */
 #header-title {
-  font-family:'Cinzel', serif; 
-  font-size:22px; 
-  font-weight:bold; 
+  font-family:'Cinzel', serif;
+  font-size:22px;
+  font-weight:bold;
   margin-bottom:10px;
 }
 
@@ -48,37 +47,42 @@ canvas {position:fixed; inset:0; z-index:0;}
 #alerts {width:90%; max-width:720px; padding:8px; margin:12px 0; text-align:center; font-size:13px; line-height:1.3; position:relative;}
 .alert {
   display:inline-block;
-  margin:2px 4px;
+  padding:10px 16px;
+  margin:4px;
+  border-radius:12px;
+  color:#fff;
+  font-weight:bold;
+  opacity:0.9;
   font-family:'Space Grotesk', sans-serif;
   font-size:14px;
-  opacity:0.9;
-  font-weight:bold;
-  transition:opacity 1s;
+  transition:opacity 1s, transform 0.3s;
+  animation: neonPulse 1.2s infinite alternate;
 }
-.alert.up {color:#00ff00;}
-.alert.down {color:#ff0000;}
-.alert.extreme {color:#ff3300;}
-.alert.normal {color:#ffff00;}
+.alert.up {background:linear-gradient(90deg,#00ff00,#00aa00);}
+.alert.down {background:linear-gradient(90deg,#ff0000,#aa0000);}
+@keyframes neonPulse {
+  0% {text-shadow:0 0 4px #fff,0 0 10px #0ff,0 0 20px #0ff,0 0 40px #0ff;}
+  50% {text-shadow:0 0 8px #fff,0 0 20px #0ff,0 0 40px #0ff,0 0 60px #0ff;}
+  100% {text-shadow:0 0 4px #fff,0 0 10px #0ff,0 0 20px #0ff,0 0 40px #0ff;}
+}
 
-/* ===== SYSTEM STATE ===== */
-#systemStateContainer {
-  display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:12px 0; font-family:'Cinzel', serif; font-size:16px;
+/* ===== SYSTEM BUTTON ===== */
+#systemButton {
+  width:92vw; max-width:720px;
+  padding:14px 0; margin:12px 0; border-radius:30px;
+  border:1px solid #0ff; background:rgba(0,255,255,0.05);
+  text-align:center; font-size:16px; font-weight:bold; font-family:'Cinzel', serif;
+  position:relative; overflow:hidden;
+  animation: glowFade 3s infinite alternate;
 }
-.systemIndicator {
-  min-width:120px; text-align:center; font-weight:bold; padding:4px 0; border-radius:12px; transition:all 0.5s; 
+#systemButton span {
+  position:relative; z-index:2; padding:4px 12px; display:inline-block; min-width:120px; transition:all 0.5s; font-weight:bold;
+  text-shadow:0 0 8px #0ff,0 0 16px #0ff; font-family:'Space Grotesk', sans-serif;
 }
-.systemIndicator.extremeFear {color:#ff0000;}
-.systemIndicator.fear {color:#ff6600;}
-.systemIndicator.greed {color:#00ff00;}
-.systemIndicator.normal {color:#ffff00;}
-.systemIndicator.state1 {color:#00ffff;}
-.systemIndicator.state2 {color:#ff00ff;}
-.systemIndicator.state3 {color:#ffaa00;}
-.systemIndicator.state4 {color:#ff99ff;}
-.systemIndicator.state5 {color:#66ff66;}
-.systemIndicator.state6 {color:#66ccff;}
-.systemIndicator.state7 {color:#ff6666;}
-.systemIndicator.state8 {color:#9999ff;}
+#systemButton span.upState {color:#ff0; text-shadow:0 0 8px #ff0,0 0 16px #ff0;}
+#systemButton span.downState {color:#f00; text-shadow:0 0 8px #f00,0 0 16px #f00;}
+#systemButton span.normalState {color:#0f0; text-shadow:0 0 8px #0f0,0 0 16px #0f0;}
+@keyframes glowFade {0% {box-shadow:0 0 12px #0ff,0 0 24px #0ff inset;} 50% {box-shadow:0 0 24px #0ff,0 0 48px #0ff inset;} 100% {box-shadow:0 0 12px #0ff,0 0 24px #0ff inset;}}
 
 /* ===== ANALYTICS & CHARTS ===== */
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px; font-family:'Space Grotesk', sans-serif;}
@@ -98,18 +102,7 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div class="section" id="fx"></div>
   <div class="section" id="metals"></div>
 
-  <!-- SYSTEM STATE -->
-  <div id="systemStateContainer">
-    <div id="systemState" class="systemIndicator normal">Норма</div>
-    <div class="systemIndicator state1">Індикатор 1</div>
-    <div class="systemIndicator state2">Індикатор 2</div>
-    <div class="systemIndicator state3">Індикатор 3</div>
-    <div class="systemIndicator state4">Індикатор 4</div>
-    <div class="systemIndicator state5">Індикатор 5</div>
-    <div class="systemIndicator state6">Індикатор 6</div>
-    <div class="systemIndicator state7">Індикатор 7</div>
-    <div class="systemIndicator state8">Індикатор 8</div>
-  </div>
+  <div id="systemButton"><span id="systemState">LOADING...</span></div>
 
   <div id="alerts"></div>
 
@@ -126,7 +119,7 @@ canvas {position:fixed; inset:0; z-index:0;}
 </div>
 
 <script>
-// ================= STARS BACKGROUND =================
+// ===== STARS BACKGROUND =====
 const s=document.getElementById("stars"); const ctx=s.getContext("2d");
 let W,H,stars=[];
 function resize(){W=s.width=innerWidth; H=s.height=innerHeight; stars=Array.from({length:160},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*W}));}
@@ -134,7 +127,7 @@ resize(); window.addEventListener("resize",resize);
 function draw(){ctx.fillStyle="#000"; ctx.fillRect(0,0,W,H); ctx.fillStyle="#9fe7ff"; stars.forEach(st=>{st.z-=0.2; if(st.z<=0) st.z=W; const k=128/st.z; const x=(st.x-W/2)*k+W/2; const y=(st.y-H/2)*k+H/2; if(x>0&&x<W&&y>0&&y<H){const size=(1-st.z/W)*2; ctx.fillRect(x,y,size,size);}}); requestAnimationFrame(draw);}
 draw();
 
-// ================= FX & Metals =================
+// ===== FX & Metals =====
 async function loadFX(){
   try{
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -153,7 +146,7 @@ function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300
 loadFX(); loadMetals();
 setInterval(loadFX,300000);
 
-// ================= CRYPTO & ANALYTICS & ALERTS =================
+// ===== CRYPTO & ALERTS =====
 async function loadCrypto(){
   try{
     const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","LTCUSDT","DASHUSDT"];
@@ -167,27 +160,9 @@ async function loadCrypto(){
       return `<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`;
     }).join("");
 
-    const cryptoVol = Math.max(...data.map(c=>Math.abs(parseFloat(c.priceChangePercent)))).toFixed(2) + "%";
-    const metalsVol = "0.5%"; 
-    const fxVol = "0.3%";
-    const fngRes = await fetch("https://api.alternative.me/fng/?limit=1");
-    const fngData = await fngRes.json();
-    const fngIndex = fngData.data[0].value;
-    const fngText = fngData.data[0].value_classification;
+    document.getElementById("analytics").innerHTML = analytics;
 
-    const now = new Date(); 
-    const hours = now.getUTCHours();
-    let session = "Unknown";
-    if(hours>=0 && hours<9) session="Asia Session";
-    else if(hours>=7 && hours<16) session="Europe Session";
-    else if(hours>=13 && hours<22) session="US Session";
-
-    document.getElementById("analytics").innerHTML = analytics + 
-      `<div>- Волатильність: Crypto ${cryptoVol} / Metals ${metalsVol} / FX ${fxVol}</div>` +
-      `<div>- Індекс страху та жадібності: ${fngIndex} (${fngText})</div>` +
-      `<div>- Поточна сесія: ${session}</div>`;
-
-    // Alerts без підложки
+    // Alerts
     const alertsContainer = document.getElementById("alerts");
     alertsContainer.innerHTML = "";
     data.forEach(c=>{
@@ -202,41 +177,30 @@ async function loadCrypto(){
       }
     });
 
-    // ================= SYSTEM STATE =================
-    const systemState = document.getElementById("systemState");
-    if(fngText.includes("Extreme") || parseFloat(cryptoVol) > 10){
-      systemState.innerText="Екстримальний страх"; systemState.className="systemIndicator extremeFear";
-    } else if(fngText.includes("Fear")){
-      systemState.innerText="Страх"; systemState.className="systemIndicator fear";
+    // SYSTEM STATE без підложки для "Страх"
+    const btn = document.getElementById("systemButton");
+    const span = document.getElementById("systemState");
+    const fngRes = await fetch("https://api.alternative.me/fng/?limit=1");
+    const fngData = await fngRes.json();
+    const fngText = fngData.data[0].value_classification;
+
+    if(fngText.includes("Extreme") || Math.max(...data.map(c=>Math.abs(parseFloat(c.priceChangePercent))))>5){
+      span.innerText="Страх"; span.className="downState";
     } else if(fngText.includes("Greed")){
-      systemState.innerText="Жадібність"; systemState.className="systemIndicator greed";
+      span.innerText="Жадібність"; span.className="upState";
     } else {
-      systemState.innerText="Норма"; systemState.className="systemIndicator normal";
+      span.innerText="Норма"; span.className="normalState";
     }
 
-  }catch(err){
-    console.log(err);
-    document.getElementById("tickerText").innerText="Crypto data unavailable";
-    document.getElementById("analytics").innerHTML = `
-      <div>- Об’єм торгів за 24h: unavailable</div>
-      <div>- % зміна за день: unavailable</div>
-      <div>- Волатильність: unavailable</div>
-      <div>- Індекс страху та жадібності: unavailable</div>
-      <div>- Поточна сесія: unavailable</div>
-    `;
-    document.getElementById("alerts").innerText="Alerts unavailable";
-    const systemState = document.getElementById("systemState");
-    systemState.innerText="LOADING..."; 
-    systemState.className="systemIndicator normal";
-  }
+  }catch(err){console.log(err);}
 }
 loadCrypto(); setInterval(loadCrypto,30000);
 
-// ================= LAST UPDATE =================
+// ===== LAST UPDATE =====
 function updateTime(){document.getElementById("lastUpdate").innerText=new Date().toLocaleTimeString();}
 updateTime(); setInterval(updateTime,60000);
 
-// ================= TRADINGVIEW =================
+// ===== TRADINGVIEW =====
 const tv = [
   {id:"chartBTC", symbol:"BTCUSD"},
   {id:"chartETH", symbol:"ETHUSD"},
