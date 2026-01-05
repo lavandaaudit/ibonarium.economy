@@ -5,33 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ibonarium•cripto.signal.live</title>
 
-<!-- Підключаємо шрифти Cinzel та Space Grotesk -->
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
 * {margin:0; padding:0; box-sizing:border-box;}
 html, body {
   width:100%; height:100%;
-  background:#000;
-  font-family:'Space Grotesk', sans-serif;
-  color:#9fe7ff;
+  background:#000; 
+  font-family:'Space Grotesk', sans-serif; 
+  color:#9fe7ff; 
   overflow-x:hidden;
 }
 canvas {position:fixed; inset:0; z-index:0;}
 .wrapper {
-  position:relative; z-index:2;
-  display:flex; flex-direction:column;
-  align-items:center;
-  padding:20px; gap:6px;
-  text-align:center;
+  position:relative; z-index:2; 
+  display:flex; flex-direction:column; 
+  align-items:center; 
+  padding:20px; gap:6px; 
+  text-align:center; 
   font-size:13px; line-height:1.3;
 }
 
 /* ===== HEADER ===== */
 #header-title {
-  font-family:'Cinzel', serif;
-  font-size:22px;
-  font-weight:bold;
+  font-family:'Cinzel', serif; 
+  font-size:22px; 
+  font-weight:bold; 
   margin-bottom:10px;
 }
 
@@ -69,20 +68,22 @@ canvas {position:fixed; inset:0; z-index:0;}
 
 /* ===== SYSTEM BUTTON ===== */
 #systemButton {
-  width:92vw; max-width:720px;
-  padding:14px 0; margin:12px 0; border-radius:30px;
-  border:1px solid #0ff; background:rgba(0,255,255,0.05);
+  width:92vw; max-width:720px; 
+  padding:14px 0; margin:12px 0; border-radius:30px; 
+  border:1px solid #0ff; background:rgba(0,255,255,0.05); 
   text-align:center; font-size:16px; font-weight:bold; font-family:'Cinzel', serif;
   position:relative; overflow:hidden;
   animation: glowFade 3s infinite alternate;
 }
 #systemButton span {
-  position:relative; z-index:2; padding:4px 12px; display:inline-block; min-width:120px; transition:all 0.5s; font-weight:bold;
-  text-shadow:0 0 8px #0ff,0 0 16px #0ff; font-family:'Space Grotesk', sans-serif;
+  position:relative; z-index:2; padding:4px 12px; border-radius:20px; 
+  display:inline-block; min-width:120px; transition:all 0.5s; font-weight:bold;
+  color:#fff; font-family:'Space Grotesk', sans-serif;
 }
-#systemButton span.upState {color:#ff0; text-shadow:0 0 8px #ff0,0 0 16px #ff0;}
-#systemButton span.downState {color:#f00; text-shadow:0 0 8px #f00,0 0 16px #f00;}
-#systemButton span.normalState {color:#0f0; text-shadow:0 0 8px #0f0,0 0 16px #0f0;}
+#systemButton span.normalState {background:none; color:#0f0;}
+#systemButton span.downState {background:none; color:#f00;}
+#systemButton span.upState {background:none; color:#ff0;}
+#systemButton span.warning {background:none; color:#f0f;}
 @keyframes glowFade {0% {box-shadow:0 0 12px #0ff,0 0 24px #0ff inset;} 50% {box-shadow:0 0 24px #0ff,0 0 48px #0ff inset;} 100% {box-shadow:0 0 12px #0ff,0 0 24px #0ff inset;}}
 
 /* ===== ANALYTICS & CHARTS ===== */
@@ -120,7 +121,7 @@ canvas {position:fixed; inset:0; z-index:0;}
 </div>
 
 <script>
-// ===== STARS BACKGROUND =====
+// ================= STARS =================
 const s=document.getElementById("stars"); const ctx=s.getContext("2d");
 let W,H,stars=[];
 function resize(){W=s.width=innerWidth; H=s.height=innerHeight; stars=Array.from({length:160},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*W}));}
@@ -128,7 +129,7 @@ resize(); window.addEventListener("resize",resize);
 function draw(){ctx.fillStyle="#000"; ctx.fillRect(0,0,W,H); ctx.fillStyle="#9fe7ff"; stars.forEach(st=>{st.z-=0.2; if(st.z<=0) st.z=W; const k=128/st.z; const x=(st.x-W/2)*k+W/2; const y=(st.y-H/2)*k+H/2; if(x>0&&x<W&&y>0&&y<H){const size=(1-st.z/W)*2; ctx.fillRect(x,y,size,size);}}); requestAnimationFrame(draw);}
 draw();
 
-// ===== FX & Metals =====
+// ================= FX & METALS =================
 async function loadFX(){
   try{
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -140,54 +141,56 @@ async function loadFX(){
         <div>1 PLN = ${(fx.rates.UAH / fx.rates.PLN).toFixed(2)} UAH</div>
         <div>1 GBP = ${(fx.rates.UAH / fx.rates.GBP).toFixed(2)} UAH</div>
       `;
-    }else{throw new Error("FX API failed");}
-  }catch(err){console.log(err); document.getElementById("fx").innerHTML="FX data unavailable";}
+    } else {throw new Error("FX API failed");}
+  } catch(err){console.log(err); document.getElementById("fx").innerHTML="FX data unavailable";}
 }
 function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
 loadFX(); loadMetals();
 setInterval(loadFX,300000);
 
-// ===== CRYPTO & ALERTS & ANALYTICS =====
+// ================= CRYPTO, ANALYTICS & ALERTS =================
 async function loadCrypto(){
   try{
     const symbols = ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","LTCUSDT","DASHUSDT"];
     const promises = symbols.map(sym => fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`).then(res=>res.json()));
     const data = await Promise.all(promises);
 
+    // ===== Ticker =====
     const tickerStr = data.map(c=>`${c.symbol.replace("USDT","")} ${parseFloat(c.lastPrice).toLocaleString()} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%)`).join(" • ");
     document.getElementById("tickerText").innerText = tickerStr;
 
+    // ===== Analytics =====
     const analytics = data.map(c=>{
       return `<div><strong>${c.symbol.replace("USDT","")}</strong> | Price: ${parseFloat(c.lastPrice).toLocaleString()} USD | 24h Δ: ${parseFloat(c.priceChange).toFixed(2)} USD (${parseFloat(c.priceChangePercent).toFixed(2)}%) | High: ${parseFloat(c.highPrice).toLocaleString()} | Low: ${parseFloat(c.lowPrice).toLocaleString()} | Volume: ${parseFloat(c.volume).toLocaleString()} | Trades: ${c.count}</div>`;
     }).join("");
-
-    // Додаткові дані перед графіками
-    const cryptoVol = Math.max(...data.map(c=>Math.abs(parseFloat(c.priceChangePercent)))).toFixed(2) + "%";
-    const metalsVol = "0.5%"; 
+    const cryptoVol = Math.max(...data.map(c=>Math.abs(parseFloat(c.priceChangePercent)))).toFixed(2);
+    const metalsVol = "0.5%";
     const fxVol = "0.3%";
+
+    // ===== FNG Index =====
     const fngRes = await fetch("https://api.alternative.me/fng/?limit=1");
     const fngData = await fngRes.json();
     const fngIndex = fngData.data[0].value;
     const fngText = fngData.data[0].value_classification;
 
-    const now = new Date(); 
+    const now = new Date();
     const hours = now.getUTCHours();
     let session = "Unknown";
     if(hours>=0 && hours<9) session="Asia Session";
     else if(hours>=7 && hours<16) session="Europe Session";
     else if(hours>=13 && hours<22) session="US Session";
 
-    document.getElementById("analytics").innerHTML = analytics +
-      `<div>- Волатильність: Crypto ${cryptoVol} / Metals ${metalsVol} / FX ${fxVol}</div>` +
+    document.getElementById("analytics").innerHTML = analytics + 
+      `<div>- Волатильність: Crypto ${cryptoVol}% / Metals ${metalsVol} / FX ${fxVol}</div>` +
       `<div>- Індекс страху та жадібності: ${fngIndex} (${fngText})</div>` +
       `<div>- Поточна сесія: ${session}</div>`;
 
-    // Alerts
+    // ===== Alerts =====
     const alertsContainer = document.getElementById("alerts");
     alertsContainer.innerHTML = "";
     data.forEach(c=>{
       const change = parseFloat(c.priceChangePercent);
-      if(Math.abs(change)>5){
+      if(Math.abs(change) > 5){
         const div = document.createElement("div");
         div.classList.add("alert");
         div.classList.add(change>0 ? "up" : "down");
@@ -196,39 +199,42 @@ async function loadCrypto(){
         setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
       }
     });
-
-    if(parseFloat(cryptoVol)>5){
+    if(parseFloat(cryptoVol) > 5){
       const div = document.createElement("div");
       div.classList.add("alert","up");
-      div.innerText = `High Crypto Volatility: ${cryptoVol}`;
-      alertsContainer.appendChild(div);
-      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
-    }
-    if(fngText.includes("Extreme")){
-      const div = document.createElement("div");
-      div.classList.add("alert","down");
-      div.innerText = `Fear & Greed Extreme: ${fngText}`;
+      div.innerText = `High Crypto Volatility: ${cryptoVol}%`;
       alertsContainer.appendChild(div);
       setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
     }
 
-    // SYSTEM STATE без підложки
+    // ===== SYSTEM STATES =====
+    const btn = document.getElementById("systemButton");
     const span = document.getElementById("systemState");
-    if(fngText.includes("Extreme") || parseFloat(cryptoVol) > 5){
-      span.innerText="Страх"; span.className="downState";
-    } else if(fngText.includes("Greed")){
-      span.innerText="Жадібність"; span.className="upState";
-    } else {
-      span.innerText="Норма"; span.className="normalState";
-    }
+    let stateText = "Норма"; span.className="normalState";
+
+    if(fngIndex >= 80) {stateText="Extreme Fear"; span.className="downState";}
+    else if(fngIndex >= 60) {stateText="Moderate Fear"; span.className="downState";}
+    else if(fngIndex >= 40) {stateText="Slight Fear"; span.className="downState";}
+    else if(fngIndex >= 20 && fngIndex < 40) {stateText="Slight Greed"; span.className="upState";}
+    else if(fngIndex >= 70) {stateText="Moderate Greed"; span.className="upState";}
+    else if(fngIndex > 90) {stateText="Extreme Greed"; span.className="upState";}
+    if(parseFloat(cryptoVol) > 5){stateText+=" | High Volatility"; span.className="warning";}
+
+    span.innerText = stateText;
 
   }catch(err){
     console.log(err);
     document.getElementById("tickerText").innerText="Crypto data unavailable";
-    document.getElementById("analytics").innerHTML = `<div>- Дані недоступні</div>`;
+    document.getElementById("analytics").innerHTML = `
+      <div>- Об’єм торгів за 24h: unavailable</div>
+      <div>- % зміна за день: unavailable</div>
+      <div>- Волатильність: unavailable</div>
+      <div>- Індекс страху та жадібності: unavailable</div>
+      <div>- Поточна сесія: unavailable</div>
+    `;
     document.getElementById("alerts").innerText="Alerts unavailable";
-    const span = document.getElementById("systemState");
-    span.innerText="LOADING..."; span.className="";
+    document.getElementById("systemState").innerText="LOADING..."; 
+    document.getElementById("systemState").className="";
   }
 }
 loadCrypto(); setInterval(loadCrypto,30000);
@@ -237,7 +243,7 @@ loadCrypto(); setInterval(loadCrypto,30000);
 function updateTime(){document.getElementById("lastUpdate").innerText=new Date().toLocaleTimeString();}
 updateTime(); setInterval(updateTime,60000);
 
-// ===== TRADINGVIEW =====
+// ===== TRADINGVIEW CHARTS =====
 const tv = [
   {id:"chartBTC", symbol:"BTCUSD"},
   {id:"chartETH", symbol:"ETHUSD"},
