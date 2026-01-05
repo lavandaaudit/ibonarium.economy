@@ -48,43 +48,37 @@ canvas {position:fixed; inset:0; z-index:0;}
 #alerts {width:90%; max-width:720px; padding:8px; margin:12px 0; text-align:center; font-size:13px; line-height:1.3; position:relative;}
 .alert {
   display:inline-block;
-  padding:10px 16px;
-  margin:4px;
-  border-radius:12px;
-  color:#fff;
-  font-weight:bold;
-  opacity:0.9;
+  margin:2px 4px;
   font-family:'Space Grotesk', sans-serif;
   font-size:14px;
-  transition:opacity 1s, transform 0.3s;
-  animation: neonPulse 1.2s infinite alternate;
+  opacity:0.9;
+  font-weight:bold;
+  transition:opacity 1s;
 }
-.alert.up {background:linear-gradient(90deg,#00ff00,#00aa00);}
-.alert.down {background:linear-gradient(90deg,#ff0000,#aa0000);}
-@keyframes neonPulse {
-  0% {text-shadow:0 0 4px #fff,0 0 10px #0ff,0 0 20px #0ff,0 0 40px #0ff;}
-  50% {text-shadow:0 0 8px #fff,0 0 20px #0ff,0 0 40px #0ff,0 0 60px #0ff;}
-  100% {text-shadow:0 0 4px #fff,0 0 10px #0ff,0 0 20px #0ff,0 0 40px #0ff;}
-}
+.alert.up {color:#00ff00;}
+.alert.down {color:#ff0000;}
+.alert.extreme {color:#ff3300;}
+.alert.normal {color:#ffff00;}
 
-/* ===== SYSTEM BUTTON ===== */
-#systemButton {
-  width:92vw; max-width:720px; 
-  padding:14px 0; margin:12px 0; border-radius:30px; 
-  border:1px solid #0ff; background:rgba(0,255,255,0.05); 
-  text-align:center; font-size:16px; font-weight:bold; font-family:'Cinzel', serif;
-  position:relative; overflow:hidden;
-  animation: glowFade 3s infinite alternate;
+/* ===== SYSTEM STATE ===== */
+#systemStateContainer {
+  display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:12px 0; font-family:'Cinzel', serif; font-size:16px;
 }
-#systemButton span {
-  position:relative; z-index:2; padding:4px 12px; border-radius:20px; 
-  display:inline-block; min-width:120px; transition:all 0.5s; font-weight:bold;
-  color:#fff; text-shadow:0 0 8px #0ff,0 0 16px #0ff; font-family:'Space Grotesk', sans-serif;
+.systemIndicator {
+  min-width:120px; text-align:center; font-weight:bold; padding:4px 0; border-radius:12px; transition:all 0.5s; 
 }
-#systemButton span.upState {background:linear-gradient(90deg,#ff0,#aa0); text-shadow:0 0 8px #ff0,0 0 16px #ff0;}
-#systemButton span.downState {background:linear-gradient(90deg,#f00,#aa00); text-shadow:0 0 8px #f00,0 0 16px #f00;}
-#systemButton span.normalState {background:linear-gradient(90deg,#0f0,#0a0); text-shadow:0 0 8px #0f0,0 0 16px #0f0;}
-@keyframes glowFade {0% {box-shadow:0 0 12px #0ff,0 0 24px #0ff inset;} 50% {box-shadow:0 0 24px #0ff,0 0 48px #0ff inset;} 100% {box-shadow:0 0 12px #0ff,0 0 24px #0ff inset;}}
+.systemIndicator.extremeFear {color:#ff0000;}
+.systemIndicator.fear {color:#ff6600;}
+.systemIndicator.greed {color:#00ff00;}
+.systemIndicator.normal {color:#ffff00;}
+.systemIndicator.state1 {color:#00ffff;}
+.systemIndicator.state2 {color:#ff00ff;}
+.systemIndicator.state3 {color:#ffaa00;}
+.systemIndicator.state4 {color:#ff99ff;}
+.systemIndicator.state5 {color:#66ff66;}
+.systemIndicator.state6 {color:#66ccff;}
+.systemIndicator.state7 {color:#ff6666;}
+.systemIndicator.state8 {color:#9999ff;}
 
 /* ===== ANALYTICS & CHARTS ===== */
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px; font-family:'Space Grotesk', sans-serif;}
@@ -104,7 +98,18 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div class="section" id="fx"></div>
   <div class="section" id="metals"></div>
 
-  <div id="systemButton"><span id="systemState">LOADING...</span></div>
+  <!-- SYSTEM STATE -->
+  <div id="systemStateContainer">
+    <div id="systemState" class="systemIndicator normal">Норма</div>
+    <div class="systemIndicator state1">Індикатор 1</div>
+    <div class="systemIndicator state2">Індикатор 2</div>
+    <div class="systemIndicator state3">Індикатор 3</div>
+    <div class="systemIndicator state4">Індикатор 4</div>
+    <div class="systemIndicator state5">Індикатор 5</div>
+    <div class="systemIndicator state6">Індикатор 6</div>
+    <div class="systemIndicator state7">Індикатор 7</div>
+    <div class="systemIndicator state8">Індикатор 8</div>
+  </div>
 
   <div id="alerts"></div>
 
@@ -182,6 +187,7 @@ async function loadCrypto(){
       `<div>- Індекс страху та жадібності: ${fngIndex} (${fngText})</div>` +
       `<div>- Поточна сесія: ${session}</div>`;
 
+    // Alerts без підложки
     const alertsContainer = document.getElementById("alerts");
     alertsContainer.innerHTML = "";
     data.forEach(c=>{
@@ -195,29 +201,17 @@ async function loadCrypto(){
         setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
       }
     });
-    if(parseFloat(cryptoVol)>5){
-      const div = document.createElement("div");
-      div.classList.add("alert","up");
-      div.innerText = `High Crypto Volatility: ${cryptoVol}`;
-      alertsContainer.appendChild(div);
-      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
-    }
-    if(fngText.includes("Extreme")){
-      const div = document.createElement("div");
-      div.classList.add("alert","down");
-      div.innerText = `Fear & Greed Extreme: ${fngText}`;
-      alertsContainer.appendChild(div);
-      setTimeout(()=>{div.style.opacity=0; setTimeout(()=>div.remove(),1000)},10000);
-    }
 
-    const btn = document.getElementById("systemButton");
-    const span = document.getElementById("systemState");
-    if(fngText.includes("Extreme") || parseFloat(cryptoVol) > 5){
-      span.innerText="Страх"; span.className="downState";
+    // ================= SYSTEM STATE =================
+    const systemState = document.getElementById("systemState");
+    if(fngText.includes("Extreme") || parseFloat(cryptoVol) > 10){
+      systemState.innerText="Екстримальний страх"; systemState.className="systemIndicator extremeFear";
+    } else if(fngText.includes("Fear")){
+      systemState.innerText="Страх"; systemState.className="systemIndicator fear";
     } else if(fngText.includes("Greed")){
-      span.innerText="Жадібність"; span.className="upState";
+      systemState.innerText="Жадібність"; systemState.className="systemIndicator greed";
     } else {
-      span.innerText="Норма"; span.className="normalState";
+      systemState.innerText="Норма"; systemState.className="systemIndicator normal";
     }
 
   }catch(err){
@@ -231,8 +225,9 @@ async function loadCrypto(){
       <div>- Поточна сесія: unavailable</div>
     `;
     document.getElementById("alerts").innerText="Alerts unavailable";
-    document.getElementById("systemState").innerText="LOADING..."; 
-    document.getElementById("systemState").className="";
+    const systemState = document.getElementById("systemState");
+    systemState.innerText="LOADING..."; 
+    systemState.className="systemIndicator normal";
   }
 }
 loadCrypto(); setInterval(loadCrypto,30000);
