@@ -137,7 +137,7 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div class="category-header">СИРОВИННІ ТОВАРИ ТА МАКРОЕКОНОМІКА</div>
 
   <!-- Жива таблиця котирувань -->
-  <div class="tv-widget" style="height:350px;">
+  <div class="tv-widget" style="height:400px;">
     <div class="tradingview-widget-container">
       <div class="tradingview-widget-container__widget"></div>
       <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
@@ -151,6 +151,7 @@ canvas {position:fixed; inset:0; z-index:0;}
             "symbols": [
               { "name": "OANDA:XAUUSD", "displayName": "Золото (Gold)" },
               { "name": "OANDA:XAGUSD", "displayName": "Срібло (Silver)" },
+              { "name": "OANDA:XPDUSD", "displayName": "Паладій (Palladium)" },
               { "name": "OANDA:XCUUSD", "displayName": "Мідь (Copper)" },
               { "name": "OANDA:WTICOUSD", "displayName": "Нафта WTI" },
               { "name": "OANDA:BCOUSD", "displayName": "Нафта Brent" },
@@ -173,6 +174,7 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div id="chartNatGas" class="chart"></div>
   <div id="chartGold" class="chart"></div>
   <div id="chartSilver" class="chart"></div>
+  <div id="chartPalladium" class="chart"></div>
   <div id="chartCopper" class="chart"></div>
 
   <!-- Економічний календар -->
@@ -308,7 +310,7 @@ loadCrypto(); setInterval(loadCrypto,30000);
 function updateTime(){document.getElementById("lastUpdate").innerText=new Date().toLocaleTimeString();}
 updateTime(); setInterval(updateTime,60000);
 
-// TradingView charts (НАДІЙНІ СИМВОЛИ BINANCE ТА OANDA)
+// TradingView charts
 const tv = [
   {id:"chartBTC", symbol:"BINANCE:BTCUSDT"},
   {id:"chartETH", symbol:"BINANCE:ETHUSDT"},
@@ -321,8 +323,10 @@ const tv = [
   {id:"chartNatGas", symbol:"OANDA:NATGASUSD"},
   {id:"chartGold", symbol:"OANDA:XAUUSD"},
   {id:"chartSilver", symbol:"OANDA:XAGUSD"},
+  {id:"chartPalladium", symbol:"OANDA:XPDUSD"},
   {id:"chartCopper", symbol:"OANDA:XCUUSD"}
 ];
+
 const script=document.createElement("script"); script.src="https://s3.tradingview.com/tv.js"; 
 script.onload=()=>{tv.forEach(c=>{new TradingView.widget({container_id:c.id,autosize:true,symbol:c.symbol,interval:"60",timezone:"Europe/Kiev",theme:"dark",style:"1",locale:"uk",hide_top_toolbar:true,hide_side_toolbar:true,allow_symbol_change:true});});};
 document.body.appendChild(script);
