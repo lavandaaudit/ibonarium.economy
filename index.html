@@ -106,8 +106,6 @@ canvas {position:fixed; inset:0; z-index:0;}
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px; font-family:'Space Grotesk', sans-serif;}
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
 .tv-widget {width:92vw; max-width:720px; margin:14px 0;}
-.ta-row {width:92vw; max-width:720px; display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; margin:14px 0;}
-.ta-item {flex:1; min-width:300px;}
 #footer {font-size:10px; opacity:0.4; margin:12px 0 30px 0; font-family:'Space Grotesk', sans-serif;}
 @media(max-width:600px){.chart{height:250px;}}
 </style>
@@ -127,6 +125,7 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div id="alerts"></div>
   <div id="analytics"></div>
 
+  <!-- Графіки Криптовалют -->
   <div id="chartBTC" class="chart"></div>
   <div id="chartETH" class="chart"></div>
   <div id="chartSOL" class="chart"></div>
@@ -152,10 +151,10 @@ canvas {position:fixed; inset:0; z-index:0;}
             "symbols": [
               { "name": "OANDA:XAUUSD", "displayName": "Золото (Gold)" },
               { "name": "OANDA:XAGUSD", "displayName": "Срібло (Silver)" },
-              { "name": "COMEX:HG1!", "displayName": "Мідь (Copper)" },
-              { "name": "TVC:USOIL", "displayName": "Нафта WTI" },
-              { "name": "TVC:UKOIL", "displayName": "Нафта Brent" },
-              { "name": "NYMEX:NG1!", "displayName": "Природний газ" }
+              { "name": "OANDA:XCUUSD", "displayName": "Мідь (Copper)" },
+              { "name": "OANDA:WTICOUSD", "displayName": "Нафта WTI" },
+              { "name": "OANDA:BCOUSD", "displayName": "Нафта Brent" },
+              { "name": "OANDA:NATGASUSD", "displayName": "Природний газ" }
             ]
           }
         ],
@@ -165,48 +164,6 @@ canvas {position:fixed; inset:0; z-index:0;}
         "locale": "uk"
       }
       </script>
-    </div>
-  </div>
-
-  <!-- Технічний аналіз (золото та нафта) -->
-  <div class="ta-row">
-    <!-- Золото TA -->
-    <div class="ta-item tv-widget" style="height:400px; margin:0;">
-      <div class="tradingview-widget-container">
-        <div class="tradingview-widget-container__widget"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-        {
-          "interval": "1D",
-          "width": "100%",
-          "isTransparent": true,
-          "height": "100%",
-          "symbol": "OANDA:XAUUSD",
-          "showIntervalTabs": true,
-          "displayMode": "single",
-          "locale": "uk",
-          "colorTheme": "dark"
-        }
-        </script>
-      </div>
-    </div>
-    <!-- Нафта TA -->
-    <div class="ta-item tv-widget" style="height:400px; margin:0;">
-      <div class="tradingview-widget-container">
-        <div class="tradingview-widget-container__widget"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-        {
-          "interval": "1D",
-          "width": "100%",
-          "isTransparent": true,
-          "height": "100%",
-          "symbol": "TVC:USOIL",
-          "showIntervalTabs": true,
-          "displayMode": "single",
-          "locale": "uk",
-          "colorTheme": "dark"
-        }
-        </script>
-      </div>
     </div>
   </div>
 
@@ -352,20 +309,20 @@ loadCrypto(); setInterval(loadCrypto,30000);
 function updateTime(){document.getElementById("lastUpdate").innerText=new Date().toLocaleTimeString();}
 updateTime(); setInterval(updateTime,60000);
 
-// TradingView charts (ОНОВЛЕНО НА БІРЖОВІ ТІКЕРИ NYMEX, COMEX, TVC)
+// TradingView charts (НАДІЙНІ СИМВОЛИ BINANCE ТА OANDA)
 const tv = [
-  {id:"chartBTC", symbol:"BTCUSD"},
-  {id:"chartETH", symbol:"ETHUSD"},
-  {id:"chartSOL", symbol:"SOLUSD"},
-  {id:"chartXRP", symbol:"XRPUSD"},
-  {id:"chartLTC", symbol:"LTCUSD"},
-  {id:"chartDASH", symbol:"DASHUSD"},
-  {id:"chartWTIOil", symbol:"TVC:USOIL"},
-  {id:"chartBrentOil", symbol:"TVC:UKOIL"},
-  {id:"chartNatGas", symbol:"NYMEX:NG1!"},
+  {id:"chartBTC", symbol:"BINANCE:BTCUSDT"},
+  {id:"chartETH", symbol:"BINANCE:ETHUSDT"},
+  {id:"chartSOL", symbol:"BINANCE:SOLUSDT"},
+  {id:"chartXRP", symbol:"BINANCE:XRPUSDT"},
+  {id:"chartLTC", symbol:"BINANCE:LTCUSDT"},
+  {id:"chartDASH", symbol:"BINANCE:DASHUSDT"},
+  {id:"chartWTIOil", symbol:"OANDA:WTICOUSD"},
+  {id:"chartBrentOil", symbol:"OANDA:BCOUSD"},
+  {id:"chartNatGas", symbol:"OANDA:NATGASUSD"},
   {id:"chartGold", symbol:"OANDA:XAUUSD"},
   {id:"chartSilver", symbol:"OANDA:XAGUSD"},
-  {id:"chartCopper", symbol:"COMEX:HG1!"},
+  {id:"chartCopper", symbol:"OANDA:XCUUSD"},
   {id:"chartDXY", symbol:"TVC:DXY"}
 ];
 const script=document.createElement("script"); script.src="https://s3.tradingview.com/tv.js"; 
