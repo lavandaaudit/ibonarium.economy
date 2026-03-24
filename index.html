@@ -34,8 +34,23 @@ canvas {position:fixed; inset:0; z-index:0;}
   margin-bottom:10px;
 }
 
+/* ===== SECTION HEADERS ===== */
+.category-header {
+  width:90%; max-width:720px;
+  margin:40px 0 15px 0;
+  padding-bottom:10px;
+  border-bottom:1px solid rgba(0, 255, 255, 0.4);
+  font-family:'Cinzel', serif;
+  font-size:20px;
+  font-weight:bold;
+  text-align:center;
+  color:#fff;
+  text-shadow:0 0 12px rgba(0, 255, 255, 0.8);
+  letter-spacing:1px;
+}
+
 /* ===== SECTIONS ===== */
-.section {width:90%; max-width:720px; margin:4px 0; display:flex; flex-wrap:wrap; justify-content:space-between;}
+.section {width:90%; max-width:720px; margin:4px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:12px;}
 .section div {margin:2px 6px; font-size:11px; line-height:1.0; font-family:'Space Grotesk', sans-serif;}
 
 /* ===== TICKER ===== */
@@ -90,25 +105,26 @@ canvas {position:fixed; inset:0; z-index:0;}
 /* ===== ANALYTICS & CHARTS ===== */
 #analytics {width:90%; max-width:720px; text-align:left; font-size:11px; line-height:1.2; margin:10px 0; border-top:1px solid #111; border-bottom:1px solid #111; padding:6px 4px; display:flex; flex-direction:column; gap:2px; font-family:'Space Grotesk', sans-serif;}
 .chart {width:92vw; max-width:720px; height:320px; margin:14px 0; border:1px solid #111;}
-#footer {font-size:10px; opacity:0.4; margin:12px 0; font-family:'Space Grotesk', sans-serif;}
-@media(max-width:600px){.chart{height:240px;}}
+.tv-widget {width:92vw; max-width:720px; margin:14px 0;}
+.ta-row {width:92vw; max-width:720px; display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; margin:14px 0;}
+.ta-item {flex:1; min-width:300px;}
+#footer {font-size:10px; opacity:0.4; margin:12px 0 30px 0; font-family:'Space Grotesk', sans-serif;}
+@media(max-width:600px){.chart{height:250px;}}
 </style>
 </head>
 <body>
 <canvas id="stars"></canvas>
 
 <div class="wrapper">
+  <!-- CRYPTO SECTION -->
   <div id="header-title">IBONARIUM • ECONOMY SIGNAL</div>
-
   <div id="ticker"><span id="tickerText">LOADING CRYPTO DATA...</span></div>
 
   <div class="section" id="fx"></div>
-  <div class="section" id="metals"></div>
 
   <div id="systemButton"><span id="systemState">Завантаження...</span></div>
 
   <div id="alerts"></div>
-
   <div id="analytics"></div>
 
   <div id="chartBTC" class="chart"></div>
@@ -118,12 +134,109 @@ canvas {position:fixed; inset:0; z-index:0;}
   <div id="chartLTC" class="chart"></div>
   <div id="chartDASH" class="chart"></div>
   
+  <!-- COMMODITIES SECTION -->
+  <div class="category-header">СИРОВИННІ ТОВАРИ ТА МАКРОЕКОНОМІКА</div>
+
+  <!-- Жива таблиця котирувань -->
+  <div class="tv-widget" style="height:350px;">
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
+      {
+        "width": "100%",
+        "height": "100%",
+        "symbolsGroups": [
+          {
+            "name": "Метали та Енергія",
+            "originalName": "Commodities",
+            "symbols": [
+              { "name": "OANDA:XAUUSD", "displayName": "Золото (Gold)" },
+              { "name": "OANDA:XAGUSD", "displayName": "Срібло (Silver)" },
+              { "name": "CAPITALCOM:COPPER", "displayName": "Мідь (Copper)" },
+              { "name": "CAPITALCOM:USOIL", "displayName": "Нафта WTI" },
+              { "name": "CAPITALCOM:UKOIL", "displayName": "Нафта Brent" },
+              { "name": "CAPITALCOM:NATGAS", "displayName": "Природний газ" }
+            ]
+          }
+        ],
+        "showSymbolLogo": true,
+        "isTransparent": true,
+        "colorTheme": "dark",
+        "locale": "uk"
+      }
+      </script>
+    </div>
+  </div>
+
+  <!-- Технічний аналіз (золото та нафта) -->
+  <div class="ta-row">
+    <!-- Золото TA -->
+    <div class="ta-item tv-widget" style="height:400px; margin:0;">
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+        {
+          "interval": "1D",
+          "width": "100%",
+          "isTransparent": true,
+          "height": "100%",
+          "symbol": "OANDA:XAUUSD",
+          "showIntervalTabs": true,
+          "displayMode": "single",
+          "locale": "uk",
+          "colorTheme": "dark"
+        }
+        </script>
+      </div>
+    </div>
+    <!-- Нафта TA -->
+    <div class="ta-item tv-widget" style="height:400px; margin:0;">
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+        {
+          "interval": "1D",
+          "width": "100%",
+          "isTransparent": true,
+          "height": "100%",
+          "symbol": "CAPITALCOM:USOIL",
+          "showIntervalTabs": true,
+          "displayMode": "single",
+          "locale": "uk",
+          "colorTheme": "dark"
+        }
+        </script>
+      </div>
+    </div>
+  </div>
+
+  <!-- Графіки сировини -->
   <div id="chartWTIOil" class="chart"></div>
   <div id="chartBrentOil" class="chart"></div>
   <div id="chartNatGas" class="chart"></div>
   <div id="chartGold" class="chart"></div>
   <div id="chartSilver" class="chart"></div>
   <div id="chartCopper" class="chart"></div>
+  <div id="chartDXY" class="chart"></div>
+
+  <!-- Економічний календар -->
+  <div class="category-header">ЕКОНОМІЧНИЙ КАЛЕНДАР</div>
+  <div class="tv-widget" style="height:500px;">
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
+      {
+        "colorTheme": "dark",
+        "isTransparent": true,
+        "width": "100%",
+        "height": "100%",
+        "locale": "uk",
+        "importanceFilter": "-1,0,1",
+        "currencyFilter": "USD,EUR,GBP,CNY,JPY,AUD,CAD,CHF"
+      }
+      </script>
+    </div>
+  </div>
 
   <div id="footer">© IBONARIUM • останнє оновлення: <span id="lastUpdate"></span></div>
 </div>
@@ -137,7 +250,7 @@ resize(); window.addEventListener("resize",resize);
 function draw(){ctx.fillStyle="#000"; ctx.fillRect(0,0,W,H); ctx.fillStyle="#9fe7ff"; stars.forEach(st=>{st.z-=0.2; if(st.z<=0) st.z=W; const k=128/st.z; const x=(st.x-W/2)*k+W/2; const y=(st.y-H/2)*k+H/2; if(x>0&&x<W&&y>0&&y<H){const size=(1-st.z/W)*2; ctx.fillRect(x,y,size,size);}}); requestAnimationFrame(draw);}
 draw();
 
-// ===== FX & Metals =====
+// ===== FX =====
 async function loadFX(){
   try{
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -152,9 +265,7 @@ async function loadFX(){
     } else {throw new Error("FX API failed");}
   } catch(err){console.log(err); document.getElementById("fx").innerHTML="FX дані недоступні";}
 }
-function loadMetals(){document.getElementById("metals").innerHTML='<div>XAU 4300</div><div>XAG 73</div><div>XPT 2150</div><div>XPD 1620</div>';}
-loadFX(); loadMetals();
-setInterval(loadFX,300000);
+loadFX(); setInterval(loadFX,300000);
 
 // ===== CRYPTO, ALERTS & SYSTEM STATES =====
 async function loadCrypto(){
@@ -249,12 +360,13 @@ const tv = [
   {id:"chartXRP", symbol:"XRPUSD"},
   {id:"chartLTC", symbol:"LTCUSD"},
   {id:"chartDASH", symbol:"DASHUSD"},
-  {id:"chartWTIOil", symbol:"USOIL"},
-  {id:"chartBrentOil", symbol:"UKOIL"},
-  {id:"chartNatGas", symbol:"NATGAS"},
-  {id:"chartGold", symbol:"XAUUSD"},
-  {id:"chartSilver", symbol:"XAGUSD"},
-  {id:"chartCopper", symbol:"COPPER"}
+  {id:"chartWTIOil", symbol:"CAPITALCOM:USOIL"},
+  {id:"chartBrentOil", symbol:"CAPITALCOM:UKOIL"},
+  {id:"chartNatGas", symbol:"CAPITALCOM:NATGAS"},
+  {id:"chartGold", symbol:"OANDA:XAUUSD"},
+  {id:"chartSilver", symbol:"OANDA:XAGUSD"},
+  {id:"chartCopper", symbol:"CAPITALCOM:COPPER"},
+  {id:"chartDXY", symbol:"TVC:DXY"}
 ];
 const script=document.createElement("script"); script.src="https://s3.tradingview.com/tv.js"; 
 script.onload=()=>{tv.forEach(c=>{new TradingView.widget({container_id:c.id,autosize:true,symbol:c.symbol,interval:"60",timezone:"Europe/Kiev",theme:"dark",style:"1",locale:"uk",hide_top_toolbar:true,hide_side_toolbar:true,allow_symbol_change:true});});};
